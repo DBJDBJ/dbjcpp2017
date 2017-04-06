@@ -1,7 +1,4 @@
 #pragma once
-#define DBJVERSION __DATE__ __TIME__
-#pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
-#pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION ) 
 /*
 Copyright 2017 dbj@dbj.org
 
@@ -17,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include <iostream>
+// #include <iostream>
 #include <type_traits>
 #include <utility>
 #include <memory>
@@ -249,62 +246,82 @@ namespace dbj {
 			if (!f(root)) return ; // process
 		}
 
-		/*
-		Test on an example tree of BinaryNode<wstring>
-		*/
-		static __forceinline
-			void binary_node_test(std::wostream & wos)
-		{
-			using std::wostream;
-			const wchar_t & nl = { L'\n' };
-
-			/*
-			this lambda is our processor
-			it can be any lambda, function or functor that receives pointer 
-			to BinaryNode<> instance and returns bool.
-			false	retval from the processor will stop the processing.
-			*/
-			auto printer = [](auto x) {
-				DBJ_VERIFY(x);
-				DBJ_VERIFY(x->data());
-				std::wcout << L"[" << std::setw(9) << *(x->data()) << L"]"; return true;
-			};
-			/*
-			An example of what some are calling 'comfortable API'
-			*/
-			{
-				using std::wstring;
-				typedef BinaryNode<wstring> BinaryNodeT;
-				auto guard1 = BinaryNodeT::Guardian(BinaryNodeT::make_node_pointer(L"ROOT"));
-				auto root1 = guard1.get();
-				(*root1) << L"Minnie" << L"Moonnie" << L"Tiny" << L"Shiny" << L"Galaxy";
-				root1->insert(L"And", L"Variadic", L"Insert", L"Also", L"Available");
-				wos << nl << nl;
-				dbj::treeprint::binary(wos, root1);
-				wos << nl << nl;
-			}
-			typedef BinaryNode<int> BinaryNodeT;
-			auto guard = BinaryNodeT::Guardian(BinaryNodeT::make_node_pointer(0));
-			auto root = guard.get();
-
-			(*root) << 1 << 2 << 3 << 4 << 5;
-
-			root->insert(10, 9, 8, 7, 6);
-#if 0
-			wos << nl << L"Process then visit left and right: ";
-			preorder(root , printer);
-			wos << nl;
-			wos << nl << L"Visit left, Process then  visit right: ";
-			inorder(root, printer);
-			wos << nl;
-
-			wos << nl << "LVisit left, visit right then Process: ";
-			postorder(root, printer);
-			wos << nl;
-#endif
-			wos << nl << nl ;
-			dbj::treeprint::binary(wos,root);
-			wos << nl << nl;
-		}
 	} // tree
 } // dbj
+
+namespace dbj {
+	namespace tree {
+		namespace test {
+			/*
+			Test on an example tree of BinaryNode<wstring>
+			*/
+			static __forceinline
+				void binary_node_test(std::wstring & wos)
+			{
+				using dbj::print::Print;
+				using std::wstring;
+				const wchar_t & nl = { L'\n' };
+
+				/*
+				this lambda is our processor
+				it can be any lambda, function or functor that receives pointer
+				to BinaryNode<> instance and returns bool.
+				false	retval from the processor will stop the processing.
+				*/
+				auto printer = [](auto x) {
+					DBJ_VERIFY(x);
+					DBJ_VERIFY(x->data());
+					// std::wcout << L"[" << std::setw(9) << *(x->data()) << L"]"; return true;
+					Print("[%*S]", 9, *(x->data()));
+					return true;
+
+				};
+				/*
+				An example of what some are calling 'comfortable API'
+				*/
+				{
+					using std::wstring;
+					typedef BinaryNode<wstring> BinaryNodeT;
+					auto guard1 = BinaryNodeT::Guardian(BinaryNodeT::make_node_pointer(L"ROOT"));
+					auto root1 = guard1.get();
+					(*root1) << L"Minnie" << L"Moonnie" << L"Tiny" << L"Shiny" << L"Galaxy";
+					root1->insert(L"And", L"Variadic", L"Insert", L"Also", L"Available");
+					// wos << nl << nl;
+					Print("\n\n");
+					dbj::treeprint::binary(wos, root1);
+					Print("%", wos);
+					// wos << nl << nl;
+					Print("\n\n");
+				}
+				typedef BinaryNode<int> BinaryNodeT;
+				auto guard = BinaryNodeT::Guardian(BinaryNodeT::make_node_pointer(0));
+				auto root = guard.get();
+
+				(*root) << 1 << 2 << 3 << 4 << 5;
+
+				root->insert(10, 9, 8, 7, 6);
+#if 0
+				wos << nl << L"Process then visit left and right: ";
+				preorder(root, printer);
+				wos << nl;
+				wos << nl << L"Visit left, Process then  visit right: ";
+				inorder(root, printer);
+				wos << nl;
+
+				wos << nl << "LVisit left, visit right then Process: ";
+				postorder(root, printer);
+				wos << nl;
+#endif
+				// wos << nl << nl;
+				Print("\n\n");
+				dbj::treeprint::binary(wos, root);
+				Print("%S", wos);
+				// wos << nl << nl;
+				Print("\n\n");
+			}
+
+} } } // dbj::tree::test
+
+#define DBJVERSION __DATE__ __TIME__
+#pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
+#pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION ) 

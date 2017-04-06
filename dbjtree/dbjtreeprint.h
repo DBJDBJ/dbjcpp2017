@@ -16,13 +16,14 @@ limitations under the License.
 */
 
 #include <string>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <stdio.h>
-#include <stdlib.h>
+// #include <iostream>
+// #include <iomanip>
+// #include <sstream>
+// #include <stdio.h>
+// #include <stdlib.h>
 // console unicode output helper
 #include "../dbjfm/dbjfm.h"
+#include "../dbjmodernprint/modernprint.h"
 
 namespace dbj {
 	namespace treeprint {
@@ -62,56 +63,54 @@ namespace dbj {
 				{
 					depth[di -= 3] = 0;
 				}
-
-				std::wostringstream os_;
-
+					std::wstring os_;
 			public:
+				BinaryTreePrinter(){}
 
-				BinaryTreePrinter()
-					/* os_ get's constructed exactly before the left bracket here */
-				{
-					os_.flush();
-				}
-
-				~BinaryTreePrinter()
-				{
-					os_.flush();
-				}
+				~BinaryTreePrinter(){os_.clear();}
 
 				/*
-				print into the string stream, return its result in an wstring
-				flush the internal buffer after
+				print into the string, return its result in an wstring
 				*/
 				std::wstring operator ()(NODE * tree, const int outwid_ = 0)
 				{
 					dbj::win::console::WideOut helper_;
 
-					Print(tree, outwid_);
-					this->os_ << std::endl;
-					std::wstring retval(this->os_.str());
-					this->os_.flush();
+					print_(tree, outwid_);
+					this->os_.append(L"\n");
+					std::wstring retval(this->os_.data());
+					// actually output the extended charset bits, on the console
 					const wchar_t * widestr__ = retval.data();
 							helper_(widestr__);
+
 					return retval; // copy 
 				}
 			private:
 				template<typename NODE>
-				std::wostringstream  & Print(NODE* tree, const int outwid_)
+				std::wstring  & print_(NODE* tree, const int outwid_)
 				{
-					this->os_ << L"|" << std::setw(outwid_) << *(tree->data()) << L"|\n";
+					using dbj::print::Write;
+
+					// this->os_ << L"|" << std::setw(outwid_) << *(tree->data()) << L"|\n";
+
+					Write(os_, "|%*S|\n", outwid_, *(tree->data()));
 
 					if (tree->left()) {
-						this->os_ << depth << singles[V] << L"\n";
-						this->os_ << depth << singles[K] << singles[H] << singles[H];
+						// this->os_ << depth << singles[V] << L"\n";
+						// this->os_ << depth << singles[K] << singles[H] << singles[H];
+						Write(os_, "%S%C\n", depth, singles[V]);
+						Write(os_, "%S%C%C\n", depth, singles[K], singles[H], singles[H]);
 						Push(singles[V]);
-						Print(tree->left(), outwid_);
+						print_(tree->left(), outwid_);
 						Pop();
 					}
 					if (tree->right()) {
-						this->os_ << depth << singles[V] << L"\n";
-						this->os_ << depth << singles[K] << singles[H] << singles[H];
+						// this->os_ << depth << singles[V] << L"\n";
+						// this->os_ << depth << singles[K] << singles[H] << singles[H];
+						Write(os_, "%S%C\n", depth, singles[V]);
+						Write(os_, "%S%C%C%C\n", depth, singles[K], singles[H], singles[H]);
 						Push(SS);
-						Print(tree->right(), outwid_);
+						print_(tree->right(), outwid_);
 						Pop();
 					}
 
@@ -123,10 +122,10 @@ namespace dbj {
 
 		template <typename T>
 		static __forceinline
-			void binary (std::wostream & os_, T * tree )
+			void binary (std::wstring & os_, T * tree )
 		{
 			BinaryTreePrinter<T> tpf;
-				os_ << tpf(tree) << std::endl;
+				os_.append(tpf(tree)) ;
 		}
 #if 0
 		void test2()

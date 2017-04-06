@@ -26,7 +26,7 @@ int main()
 	using std::wstring;
 	    wcout << "\n\nDBJCPP17 -- Modern C++ 2017 by DBJDBJ <dbj@dbj.org>  \n\n";
 	try {
-
+		dbj::test::do_the_tests();
 		dbj::print::test::do_the_tests();
 #if 0		
 		dbj::win::console::the_std_way();
@@ -41,6 +41,9 @@ int main()
 	}
 	catch (std::exception & ex_) {
 		wcerr << "std::exception: " << ex_.what() << "\n" ;
+	}
+	catch (const char * const ex_) {
+		wcerr << "exception: " << ex_ << "\n";
 	}
 	catch (... ) {
 		wcerr << L"Unknown exception: \n" ;

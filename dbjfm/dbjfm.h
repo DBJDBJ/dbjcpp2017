@@ -28,7 +28,6 @@ limitations under the License.
 #define VC_EXTRALEAN
 #include <Windows.h>
 #include <combaseapi.h>
-#include <crtdbg.h>
 
 #include <io.h>
 #include <fcntl.h>
@@ -37,13 +36,26 @@ limitations under the License.
 #include <iostream>
 #include <clocale>
 
+/*
+This is mandatory.
+Otherwise release version might compile non carefull code into ((void)0)
+Be sure there is only one include of assert and is done this way.
+This is giving us assertion's for a release code too.
+When and if confident remove this NDEBUG undef
+*/
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+#include <assert.h>
+
+
 #define DBJINLINE static __forceinline 
 
 // Taken from MODERN v1.26 - http://moderncpp.com
 // Copyright (c) 2015 Kenny Kerr
 #pragma region
 #ifdef _DEBUG
-#define DBJ_ASSERT _ASSERTE
+#define DBJ_ASSERT assert
 #define DBJ_VERIFY DBJ_ASSERT
 #define DBJ_VERIFY_(result, expression) DBJ_ASSERT(result == expression)
 template <typename ... Args>
@@ -65,8 +77,124 @@ DBJINLINE void DBJ_TRACE(wchar_t const * const message, Args ... args) noexcept
 #endif
 #pragma endregion
 
+#pragma once
+
+#include <windows.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <locale>
+#include <codecvt>
+#include <functional>
+
+#pragma region dbj_simple
+
 namespace dbj {
-#if 0
+
+	namespace str {
+		// http://stackoverflow.com/questions/4804298/how-to-convert-wstring-into-string
+		DBJINLINE
+		std::wstring to_wide(const std::string& str)
+		{
+			using convert_typeX = std::codecvt_utf8<wchar_t>;
+			std::wstring_convert<convert_typeX, wchar_t> converterX;
+			return converterX.from_bytes(str);
+		}
+
+		DBJINLINE std::string to_str (const std::wstring& wstr)
+		{
+			using convert_typeX = std::codecvt_utf8<wchar_t>;
+			std::wstring_convert<convert_typeX, wchar_t> converterX;
+			return converterX.to_bytes(wstr);
+		}
+
+		/*
+		"H" , "ello" yields "Hello"
+		using this is actually faster than auto s = L"H" + L"ello"
+		*/
+		DBJINLINE std::wstring & prepend(const std::wstring s1, std::wstring & s2)
+		{
+			return s2.insert(0, s1);
+		}
+
+	} // eof namespace str
+
+	namespace utl {
+		std::exception make_exception(const std::wstring & ws) {
+			return std::exception(str::to_str(ws).data());
+		}
+	} // eof namespace utl
+
+} // eof dbj
+  
+  /*
+  Stuff bellow is C. This may look like a kludge. But it is beautifully simple and
+  working solution when compared to the same C code wrapped into C++11.
+  */
+
+enum { dbj_simple_BUFFER_SIZE = 256 };
+
+extern "C" DBJINLINE const wchar_t * const dbj_simple_printError(const wchar_t* msg)
+{
+	DWORD eNum;
+	wchar_t sysMsg[256];
+	wchar_t* p;
+
+	eNum = GetLastError();
+	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, eNum,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		sysMsg, 256, NULL);
+
+	// Trim the end of the line and terminate it with a null
+	p = sysMsg;
+	while ((*p > 31) || (*p == 9))
+		++p;
+	do { *p-- = 0; } while ((p >= sysMsg) &&
+		((*p == '.') || (*p < 33)));
+
+	static wchar_t buf[1024] = L"";
+	// clean the previous message if any
+	wmemset(buf, L'\0', sizeof(buf) / sizeof(wchar_t));
+	// Make the message
+	assert(swprintf_s(buf, 1024, TEXT("\n\t%s failed with error %d (%s)"), msg, eNum, sysMsg) > 0);
+	// Display the message
+	wprintf(buf);
+	// Return the message
+	return buf;
+}
+
+// Get the current working directory
+extern "C" DBJINLINE const wchar_t * const dbj_simple_current_dir(LPCWSTR lpPathName) {
+	static TCHAR infoBuf[dbj_simple_BUFFER_SIZE];
+	assert(GetCurrentDirectory(dbj_simple_BUFFER_SIZE, infoBuf));
+	return infoBuf;
+}
+
+// Set to current working directory
+extern "C" DBJINLINE void dbj_simple_set_current_dir(LPCWSTR lpPathName) {
+	assert(SetCurrentDirectory(lpPathName));
+}
+
+// Get and display the Windows directory.
+extern "C" DBJINLINE const wchar_t * const dbj_simple_windows_dir() {
+	static TCHAR infoBuf[dbj_simple_BUFFER_SIZE];
+	assert(GetWindowsDirectory(infoBuf, dbj_simple_BUFFER_SIZE));
+	return infoBuf;
+}
+
+// Get and display the system directory.
+extern "C" DBJINLINE const wchar_t * const dbj_simple_system_dir() {
+	static TCHAR infoBuf[dbj_simple_BUFFER_SIZE];
+	assert(GetSystemDirectory(infoBuf, dbj_simple_BUFFER_SIZE));
+	return infoBuf;
+}
+#pragma endregion dbj_simple
+
+namespace dbj {
+#if 1
+	typedef void(*voidvoidfun) ();
+	template< voidvoidfun ATSTART, voidvoidfun ATEND>
 	struct __declspec(novtable)
 		COUNTER
 	{
@@ -79,17 +207,23 @@ namespace dbj {
 		COUNTER() {
 			const UINT & ctr = (counter())++;
 			if (0 == ctr) {
-				// make something once
+				// make something once and upon construction
+				ATSTART()(); 
 			}
 		}
 		~COUNTER() {
 			const UINT & ctr = --(counter());
 			if (0 == ctr) {
-				// destroy something once
+				// before destruciton do something once
+				ATEND()();
 			}
 		}
 	};
-	// static COUNTER the_counter__;
+	/*  
+	void f1 () { printf("Start!"); } ;
+	void f2 () { printf("End  !"); } ;
+	static COUNTER<f1,f2> the_counter__;
+	*/
 #endif
 #if DBJPOLICY
 	namespace policy {

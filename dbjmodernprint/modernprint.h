@@ -26,14 +26,24 @@ namespace dbj {
 		{
 			target.append(value, size);
 		}
+#pragma region DBJ
+		/*
+		DBJ: this is a performance hit, but delivers transformation to wide string
+		*/
+		DBJINLINE void Append(std::wstring & target,
+			char const * const value, size_t const size)
+		{
+			std::string s_;
+			Append( s_, value, size);
+			target.append( dbj::str::to_wide(s_) );
+		}
+#pragma endregion DBJ
 		template <typename P>
 		DBJINLINE void Append(P target, char const * const value, size_t const size)
 		{
 			target("%.*s", size, value);
 		}
 
-#pragma region dbj overloads
-#pragma endregion dbj overloads
 		DBJINLINE void Append(FILE * target,
 			char const * const value, size_t const size)
 		{
@@ -68,6 +78,20 @@ namespace dbj {
 			snprintf(&target[back], size + 1, format, args ...);
 		}
 
+#pragma region DBJ
+		/*
+		DBJ: again a performance hit but delivers transformation to wide string
+		*/
+		template <typename ... Args>
+		DBJINLINE void AppendFormat(std::wstring & target,
+			char const * const format, Args ... args)
+		{
+			std::string str_;
+			AppendFormat(str_, format, args ...);
+			target.append( dbj::str::to_wide(str_) );
+		}
+#pragma endregion DBJ
+
 		template <typename P, typename ... Args>
 		DBJINLINE void AppendFormat(P target, char const * const format, Args ... args)
 		{
@@ -81,13 +105,21 @@ namespace dbj {
 			fprintf(target, format, args ...);
 		}
 
-		/*Let’s assume the Write driver function will pass each argument to a WriteArgument function. Here’s one for strings:*/
+		/* Internal::Write will pass each argument to a WriteArgument function. Here’s one for strings:*/
 		template <typename Target>
 		DBJINLINE void WriteArgument(Target & target, std::string const & value)
 		{
 			Append(target, value.c_str(), value.size());
 		}
-
+#if 1
+#pragma region DBJ
+		template <typename Target>
+		DBJINLINE void WriteArgument(Target & target, const std::wstring & wvalue)
+		{
+			AppendFormat(target, "%.*S", static_cast<int>(wvalue.size()) - 1 , wvalue.c_str());
+		}
+#pragma endregion DBJ
+#endif
 		/*Here’s another WriteArgument function for integer arguments:*/
 		template <typename Target>
 		DBJINLINE void WriteArgument(Target & target, int const value)
@@ -161,11 +193,11 @@ namespace dbj {
 
 		size_t count = 0;
 		Write(count, "Hello %", 2015);
-		assert(count == strlen("Hello 2015"));
+		DBJ_VERIFY(count == strlen("Hello 2015"));
 		*/
 
 		/*
-		Anything that implements IFormatable can be used as the source of the WriteArgument
+		Anything that implements IPrintable can be used as the source of the WriteArgument
 		This is used to avoid direct coupling with this Write() mechanism
 
 		DBJ: removed usage of the __inteface keyword
@@ -173,7 +205,7 @@ namespace dbj {
 		And because COM is a C compatible definition, one cannot have 
 		operators, Ctor or Dtors.
 		*/
-		struct IFormatable
+		struct IPrintable
 		{
 			typedef wchar_t *  StringType;
 			/* 
@@ -188,24 +220,26 @@ namespace dbj {
 			ABI issues. If ever ...
 			*/
 			virtual StringType content() const noexcept = 0 ;
+
 		protected:
 			/*
 			DBJ added helpers for inheritors 
 			these functions are static so they do not appear in the vtable
 			*/
-			DBJINLINE IFormatable::StringType 
+			DBJINLINE IPrintable::StringType 
 			  cast ( const std::wstring & t) {
-				return const_cast<IFormatable::StringType>(t.data());
+				return const_cast<IPrintable::StringType>(t.data());
 			}
-			DBJINLINE IFormatable::StringType
-				cast(const IFormatable::StringType t ) {
-				return const_cast<IFormatable::StringType>(t);
+			DBJINLINE IPrintable::StringType
+				cast(const IPrintable::StringType t ) {
+				return const_cast<IPrintable::StringType>(t);
 			}
+
 		};
 
-		/* usage of IFormatable */
+		/* usage of IPrintable */
 		template <typename Target>
-		DBJINLINE void WriteArgument(Target & target, IFormatable const & source_)
+		DBJINLINE void WriteArgument(Target & target, IPrintable const & source_)
 		{
 #ifdef _DEBUG
 			auto content_ = source_.content();
@@ -222,13 +256,22 @@ namespace dbj {
 		DBJINLINE void Write(Target & target,
 			char const (&format)[Count], Args const & ... args)
 		{
+#if _DEBUG
+			auto place_holder_count = Internal::CountPlaceholders(format);
+			auto num_of_args = sizeof ... (args);
+
+			if (place_holder_count != num_of_args)
+				throw "Write() Exception: number of format arguments placeholders does not match a number of args.";
+#else
 			DBJ_VERIFY(
 					Internal::CountPlaceholders(format) == sizeof ... (args)
 			) ;
+#endif
 				Internal::Write(target, format, Count - 1, args ...);
 		}
 
-		namespace Internal {
+		namespace Internal 
+		{
 			DBJINLINE constexpr unsigned CountPlaceholders(char const * const format)
 			{
 				return (*format == dbj::print::PLACEHOLDER ) +
@@ -236,20 +279,24 @@ namespace dbj {
 			}
 
 			template <typename Target, typename First, typename ... Rest>
-			DBJINLINE void Write(Target & target, char const * const value,
+			DBJINLINE void Write(Target & target, char const * const format,
 				size_t const size, First const & first, Rest const & ... rest)
 			{
-				// Magic goes here
+				// find the position of the firs placeholder in the format string
 				size_t placeholder = 0;
-				while (value[placeholder] != dbj::print::PLACEHOLDER )
+				while (format[placeholder] != dbj::print::PLACEHOLDER )
 				{
 					++placeholder;
 				}
-				assert(value[placeholder] == dbj::print::PLACEHOLDER );
-				Append(target, value, placeholder);
-
+				DBJ_VERIFY(format[placeholder] == dbj::print::PLACEHOLDER );
+				
+				// first append whatever is before the first placeholder
+				Append(target, format, placeholder);
+				// now use the function found for the type First
 				WriteArgument(target, first);
-				Write(target, value + placeholder + 1, size - placeholder - 1, rest ...);
+				// recursively proceed with the rest or use the non variadic Write overload
+				// to stop the recursion
+				Write(target, format + placeholder + 1, size - placeholder - 1, rest ...);
 			}
 
 			// Ultimately, the compiler will run out of arguments and a non - variadic overload will be required to complete the operation :
@@ -267,8 +314,24 @@ namespace dbj {
 		*/
 		template <unsigned Count, typename ... Args>
 		DBJINLINE void Print(char const (&format)[Count],
-			Args const & ... args) noexcept
+			Args const & ... args) 
 		{
+#if _DEBUG
+			if (!std::strstr(format, "%"))
+				throw "Can not start Print() arguments, with a string which has no '%' (aka the placeholder) in it.";
+#endif
+				dbj::print::Write(printf, format, args ...);
+		}
+
+		/* Print(1,"Joe", in(*)(), L"Q") */
+		template <typename ... Args>
+		DBJINLINE void Print( Args const & ... args) 
+		{
+			const unsigned argsize = sizeof ... (args);
+			char  format[argsize+1] = {} ;
+				std::memset(format,'%', argsize);
+					format[argsize] = '\0';
+//				DBJ_VERIFY(argsize == strlen(format));
 			dbj::print::Write(printf, format, args ...);
 		}
 
@@ -295,51 +358,75 @@ namespace dbj {
 #endif
 				static AllUnits test_units = {
 					[] {
+					std::wstring wtext = {};
+					std::string   text = {};
+
+					Write(text, "{ % }", "0 1 2 3 4 5 6 7 8 9");
+					DBJ_VERIFY(text == "{ 0 1 2 3 4 5 6 7 8 9 }");
+
+					Write(wtext, "{ % % % % }", "0", "1 2", "3 4 5", "6 7 8 9");
+					DBJ_VERIFY(wtext == L"{ 0 1 2 3 4 5 6 7 8 9 }");
+
+
+					return "OK: simple test 1";
+				},
+					[] {
+							std::wstring wtext = {L"\n\n["};
+							std::string   text = {};
+
+							Write(text, "{ % }", "0 1 2 3 4 5 6 7 8 9");
+							Write(wtext, "{ % % % % }", "0", "1 2", "3 4 5", "6 7 8 9");
+
+							Print(wtext, text, "]---[", wtext, "]-- - [", __uuidof(IUnknown),"]\n\n");
+
+							return "OK: simple test 2";
+				       },
+					[] {
 						std::vector<int> const numbers{ 1, 2, 3, 4, 5, 6 };
 						std::string text;
-						Print("\n{ % }", numbers);
+						Print("\n{ % }",numbers);
 						Write(text, "{ % }", numbers);
-						assert(text == "{ 1, 2, 3, 4, 5, 6 }");
-						return "OK: Vector visualisation";
+						DBJ_VERIFY(text == "{ 1, 2, 3, 4, 5, 6 }");
+						return "OK: Vector<int> visualisation";
 					},
 				[] {
 					std::vector<std::string> const names{ "Jim", "Jane", "June" };
 					std::string text;
 					Write(text, "{ % }", names);
-					assert(text == "{ Jim, Jane, June }");
-					return "OK: std::string printing";
+					DBJ_VERIFY(text == "{ Jim, Jane, June }");
+					return "OK: Vector<std::string> printing to std::string";
 					},
 				[] {
 					//we can now calculate the required size quite simply :
 					size_t count = 0;
 					Write(count, "Hello %", 2015);
-					assert(count == strlen("Hello 2015"));
+					DBJ_VERIFY(count == strlen("Hello 2015"));
 					return "OK: required size counting";
 					},
 				[] {
 					std::string text;
 					Write(text, "{%}", __uuidof(IUnknown));
-					assert(text == "{00000000-0000-0000-C000-000000000046}");
-					Print("\nIUnknown GUID:[%]",text);
+					DBJ_VERIFY(text == "{00000000-0000-0000-C000-000000000046}");
+					Print("\nIUnknown GUID is:[%]", __uuidof(IUnknown));
 					return "OK: GUID printing";
 					},
 				[]{
-					class Test : public IFormatable
+					class Test : public IPrintable
 					{
 						// remember: unicode only
 						std::wstring name_;
 					public:
-						Test() : name_(L"class Test : public IFormatable {};") {
+						Test() : name_(L"class Test : public IPrintable {};") {
 						}
 
 						Test::~Test() {	name_.clear(); }
 
-						IFormatable::StringType content() const noexcept {
-							return IFormatable::cast(name_);
+						IPrintable::StringType content() const noexcept {
+							return IPrintable::cast(name_);
 						}
 					};
-					Print("\nTest object content is: [%]", Test());
-					return "OK: IFormatable Object printing";
+					Print("\nTest IPrintable object content is: [%]\n", Test());
+					return "OK: IPrintable Object printing";
 					}
 				};
 
