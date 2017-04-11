@@ -26,15 +26,19 @@ limitations under the License.
 
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
-#include <Windows.h>
+#include <windows.h>
 #include <combaseapi.h>
-
+#include <stdio.h>
+#include <wchar.h>
 #include <io.h>
 #include <fcntl.h>
 
 #include <string>
 #include <iostream>
 #include <clocale>
+#include <locale>
+#include <codecvt>
+#include <functional>
 
 /*
 This is mandatory.
@@ -47,7 +51,6 @@ When and if confident remove this NDEBUG undef
 #undef NDEBUG
 #endif
 #include <assert.h>
-
 
 #define DBJINLINE static __forceinline 
 
@@ -76,15 +79,6 @@ DBJINLINE void DBJ_TRACE(wchar_t const * const message, Args ... args) noexcept
 #define DBJ_TRACE __noop
 #endif
 #pragma endregion
-
-#pragma once
-
-#include <windows.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <locale>
-#include <codecvt>
-#include <functional>
 
 #pragma region dbj_simple
 
@@ -192,7 +186,7 @@ extern "C" DBJINLINE const wchar_t * const dbj_simple_system_dir() {
 #pragma endregion dbj_simple
 
 namespace dbj {
-#if 1
+#pragma region single counter
 	typedef void(*voidvoidfun) ();
 	template< voidvoidfun ATSTART, voidvoidfun ATEND>
 	struct __declspec(novtable)
@@ -220,11 +214,11 @@ namespace dbj {
 		}
 	};
 	/*  
-	void f1 () { printf("Start!"); } ;
-	void f2 () { printf("End  !"); } ;
+	void f1 () { printf("Start once!"); } ;
+	void f2 () { printf("End   once!"); } ;
 	static COUNTER<f1,f2> the_counter__;
 	*/
-#endif
+#pragma endregion single counter
 #if DBJPOLICY
 	namespace policy {
 		using std::wstring;
@@ -311,6 +305,13 @@ public:
 		return static_cast<DWORD>(std::strlen(st_));
 	}
 
+	DBJINLINE auto chr2str(const char & c_) {
+		static char str[1] = {};
+		str[0] = c_;
+		return str;
+	};
+
+
 	namespace win {
 		namespace console {
 
@@ -325,24 +326,60 @@ struct __declspec(novtable)	WideOut
 			DBJ_VERIFY(INVALID_HANDLE_VALUE != this->output_handle_);
 				previous_code_page_  =::GetConsoleOutputCP();
 				DBJ_VERIFY( 0 != ::SetConsoleOutputCP(1252) );
-			/*
-			TODO: GetLastError()
-			*/
+			/*			TODO: GetLastError()			*/
 			}
 
 		~WideOut()
 		{
 			DBJ_VERIFY(0 != ::SetConsoleOutputCP(previous_code_page_));
 			// TODO: should we "relase" this->output_handle_ ?
-			/*
-			TODO: GetLastError()
-  		*/
+			/*			TODO: GetLastError()  		*/
 		}
+
 		void operator () (const wchar_t * const wp_) {
 			DBJ_VERIFY( 0 != ::WriteConsoleW(this->output_handle_, wp_, len2dword(wp_), NULL, NULL));
 		}
-	};
 
+		void operator () (const std::wstring & wp_) {
+			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, wp_.data(), 
+				(DWORD)wp_.size(), 
+				NULL, NULL));
+		}
+
+		void operator () (const char * wp_) {
+			DBJ_VERIFY(0 != ::WriteConsoleA(this->output_handle_, wp_, len2dword(wp_), NULL, NULL));
+		}
+
+		void operator () (const std::string & wp_) {
+			DBJ_VERIFY(0 != ::WriteConsoleA(this->output_handle_, wp_.data(),
+				(DWORD)wp_.size(),
+				NULL, NULL));
+		}
+		/*
+		http://en.cppreference.com/w/cpp/language/parameter_pack
+		*/
+		void print(const char * format) // base function
+		{
+			(*this)(format);
+		}
+
+		template<typename T, typename... Targs>
+		void print(const char* format, T value, Targs... Fargs) // recursive variadic function
+		{
+			for (; *format != '\0'; format++) {
+				if (*format == '%') {
+					this->operator()(value);
+					print(format + 1, Fargs...); // recursive call
+					return;
+				}
+				this->operator()( dbj::chr2str(*format) ); // this calls with 'const char'
+			}
+        }
+
+};
+
+namespace test {
+	
 	using std::wstring;
 	using std::wcout;
 
@@ -352,11 +389,11 @@ struct __declspec(novtable)	WideOut
 		std::string original_locale(std::setlocale(LC_ALL, NULL), 255);
 		std::string user_locale(std::setlocale(LC_ALL, ""), 255);
 
-		wcout << "\nUpon entering this test, locale was found to be: " << original_locale.data() ;
-		wcout << "\nLocale will be now set to what the user of this machine has desired: " << user_locale.data() ;
+		wcout << "\nUpon entering this test, locale was found to be: " << original_locale.data();
+		wcout << "\nLocale will be now set to what the user of this machine has desired: " << user_locale.data();
 		wcout.flush();
 		wcout.imbue(std::locale());
-		wcout << "\nThe length of [" << str << "] is " << std::wcslen(str) ;
+		wcout << "\nThe length of [" << str << "] is " << std::wcslen(str);
 		wcout << "\nIf output is [], then the new locale is not enough to display the desired string \n";
 		wcout << "\nOk, let's try once more with the original locale" << std::setlocale(LC_ALL, original_locale.data());
 		wcout.flush();
@@ -364,87 +401,88 @@ struct __declspec(novtable)	WideOut
 		wcout << "\nThe length of [" << str << "] is " << std::wcslen(str);
 	}
 	/*
-	This crashes the app with no way to catch the exception 
+	This crashes the app with no way to catch the exception
 	ucrtbased.dll is the problem in this case
 	*/
 	DBJINLINE void test_crash_console_output() {
-					
-	try {
-					
-		fflush(stdout);
-		_setmode(_fileno(stdout), _O_U16TEXT);
 
-		printf("CRASH BANG!");
+		try {
 
+			fflush(stdout);
+			_setmode(_fileno(stdout), _O_U16TEXT);
+
+			printf("CRASH BANG!");
+
+		}
+		catch (...) {
+
+			fflush(stdout);
+			_setmode(_fileno(stdout), _O_TEXT);
+
+			printf("NEVER REACHED :( ucrtbased.dll stops the show...");
+
+		}
 	}
-	catch (...) {
-
-		fflush(stdout);
-		_setmode(_fileno(stdout), _O_TEXT);
-
-		printf("NEVER REACHED :( ucrtbased.dll stops the show...");
-
-	}
-}
 
 	DBJINLINE void test_wide_output() {
-					WideOut helper_;
-				/*
-				if locale is  English_United Kingdom.1252 both strings bellow outpout as "|-+" 
-				*/
-				const static wstring doubles = L"║═╚";
-				const static wstring singles = L"│─└";
-				static const wchar_t wendl{L'\n'};
-				
-				wcout << L"\nDoubles: " << doubles;
-				wcout << L"\nSingles: " << singles;
-			}
-				
-	DBJINLINE void writeAnsiChars(HANDLE outhand_ , char * ansi__ = 0 )
-				{
-					::SetConsoleOutputCP(1252);
+		WideOut helper_;
+		/*
+		if locale is  English_United Kingdom.1252 both strings bellow outpout as "|-+"
+		*/
+		const static wstring doubles = L"║═╚";
+		const static wstring singles = L"│─└";
+		static const wchar_t wendl{ L'\n' };
 
-					char *ansi_pound = "\nANSI: \xA3\r\n"; //A3 == pound character in Windows-1252
-					ansi_pound = ansi__ ? ansi__  : ansi_pound;
-					WriteConsoleA(outhand_ , ansi_pound, len2dword(ansi_pound), NULL, NULL);
-				}
+		wcout << L"\nDoubles: " << doubles;
+		wcout << L"\nSingles: " << singles;
+	}
 
-	DBJINLINE void writeUnicodeChars(HANDLE outhand_,  const wchar_t * widestr__ = 0 )
-				{
-					if (widestr__) {
-						WriteConsoleW(outhand_, widestr__, len2dword(widestr__), NULL, NULL);
-						return;
-					}
-					wchar_t *arr[] =
-					{
-						L"\nUnicode:",
-						L"\u00A3", //00A3 == pound character in UTF-16
-						L"\u044F", //044F == Cyrillic Ya in UTF-16
-						L"\n",   //CRLF
-						0
-					};
+	DBJINLINE void writeAnsiChars(HANDLE outhand_, char * ansi__ = 0)
+	{
+		::SetConsoleOutputCP(1252);
 
-					for (int i = 0; arr[i] != 0; i++)
-					{
-						WriteConsoleW(outhand_, arr[i], len2dword(arr[i]), NULL, NULL);
-					}
-				}
+		char *ansi_pound = "\nANSI: \xA3\r\n"; //A3 == pound character in Windows-1252
+		ansi_pound = ansi__ ? ansi__ : ansi_pound;
+		WriteConsoleA(outhand_, ansi_pound, len2dword(ansi_pound), NULL, NULL);
+	}
+
+	DBJINLINE void writeUnicodeChars(HANDLE outhand_, const wchar_t * widestr__ = 0)
+	{
+		if (widestr__) {
+			WriteConsoleW(outhand_, widestr__, len2dword(widestr__), NULL, NULL);
+			return;
+		}
+		wchar_t *arr[] =
+		{
+			L"\nUnicode:",
+			L"\u00A3", //00A3 == pound character in UTF-16
+			L"\u044F", //044F == Cyrillic Ya in UTF-16
+			L"\n",   //CRLF
+			0
+		};
+
+		for (int i = 0; arr[i] != 0; i++)
+		{
+			WriteConsoleW(outhand_, arr[i], len2dword(arr[i]), NULL, NULL);
+		}
+	}
 	/*
 	http://illegalargumentexception.blogspot.com/2009/04/i18n-unicode-at-windows-command-prompt.html#charsets_unicodeconsole
 	*/
 	DBJINLINE void basic_test()
-				{
-					const static wstring doubles = L"\nUnicode: ║═╚";
-					const static wstring singles = L"\nUnicode: │─└";
-					auto oh_ = ::GetStdHandle(STD_OUTPUT_HANDLE);
-					DBJ_VERIFY(INVALID_HANDLE_VALUE != oh_);
+	{
+		const static wstring doubles = L"\nUnicode: ║═╚";
+		const static wstring singles = L"\nUnicode: │─└";
+		auto oh_ = ::GetStdHandle(STD_OUTPUT_HANDLE);
+		DBJ_VERIFY(INVALID_HANDLE_VALUE != oh_);
 
-					writeAnsiChars(oh_);
-					writeUnicodeChars(oh_);
-					writeUnicodeChars(oh_,doubles.data());
-					writeUnicodeChars(oh_,singles.data());
-				}
-		} // console
+		writeAnsiChars(oh_);
+		writeUnicodeChars(oh_);
+		writeUnicodeChars(oh_, doubles.data());
+		writeUnicodeChars(oh_, singles.data());
+	}
+} // test
+} // console
 #if DBJCOM		
 		namespace com {
 			namespace {
