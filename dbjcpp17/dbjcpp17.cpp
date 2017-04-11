@@ -26,6 +26,7 @@ int main()
 	using std::wstring;
 	    wcout << "\n\nDBJCPP17 -- Modern C++ 2017 by DBJDBJ <dbj@dbj.org>  \n\n";
 	try {
+		dbj::win::test::test_dbjLibload();
 		dbj::test::do_the_tests();
 		dbj::print::test::do_the_tests();
 #if 0		

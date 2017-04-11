@@ -23,6 +23,7 @@ limitations under the License.
 //#include "../dbjtree/dbjtreeprint.h"
 //#include "../dbjtree/dbjtree.h"
 #include "../dbjmodernprint/modernprint.h"
+#include "../dbjlibload/dbjlibloadtest.h"
 
 #include <algorithm>
 

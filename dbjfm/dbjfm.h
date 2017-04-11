@@ -113,7 +113,7 @@ namespace dbj {
 	} // eof namespace str
 
 	namespace utl {
-		std::exception make_exception(const std::wstring & ws) {
+		DBJINLINE std::exception make_exception(const std::wstring & ws) {
 			return std::exception(str::to_str(ws).data());
 		}
 	} // eof namespace utl
