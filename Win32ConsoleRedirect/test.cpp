@@ -65,7 +65,7 @@ int APIENTRY wWinMain(
 	_ASSERT(0 && "\ntesting _ASSERT");
 	_ASSERTE(0 && "\ntesting _ASSERTE");
 
-	unsigned mili_secs_ = 5000;
+	unsigned mili_secs_ = 15000;
 		dbj.print("\n\nDone! Exiting in % seconds", std::to_string( mili_secs_/1000) );
 		Sleep(mili_secs_);
 	return 0;
