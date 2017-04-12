@@ -25,7 +25,7 @@ limitations under the License.
 #include "../dbjmodernprint/modernprint.h"
 #include "../dbjlibload/dbjlibloadtest.h"
 
-#include <algorithm>
+
 
 namespace dbj { namespace test {
 

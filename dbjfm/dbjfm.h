@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 #if ! defined(STR)
-#define STR2(x) L#x
+#define STR2(x) #x
 #define STR(x) STR2(x)
 #endif
 /* set to 1 if using com */
@@ -33,12 +33,14 @@ limitations under the License.
 #include <io.h>
 #include <fcntl.h>
 
+#include <cstdio>
 #include <string>
 #include <iostream>
 #include <clocale>
 #include <locale>
 #include <codecvt>
 #include <functional>
+#include <algorithm>
 
 /*
 This is mandatory.

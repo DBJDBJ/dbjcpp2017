@@ -4,8 +4,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <io.h>
-#include <iostream>
 #include <fstream>
 
 typedef enum {
@@ -44,12 +42,7 @@ DBJINLINE void RedirectIOToConsole(const FileMode & fmode_ = FileMode::TEXT )
 		*standard_stream = *fp;
 		assert(0 == setvbuf(standard_stream, NULL, _IONBF, 0));
 	};
-
 	redirector(stdout, fmode_, STD_OUTPUT_HANDLE);
 	redirector(stdin,  fmode_, STD_INPUT_HANDLE );
 	redirector(stderr, fmode_, STD_ERROR_HANDLE );
-
-	// make cout, wcout, cin, wcin, wcerr, cerr, wclog and clog
-	// point to console as well
-	std::ios::sync_with_stdio();
 }

@@ -1,5 +1,22 @@
 ﻿#include "../dbjfm/dbjfm.h"
 #include "guicon.h"
+
+DBJINLINE void test_std_io()
+{
+	FILE * pFile;
+	int n;
+	char name[100] = {};
+
+	assert( 0 == fopen_s( &pFile, __FILE__".txt", "w"));
+	for (n = 0; n<3; n++)
+	{
+		puts("please, enter a name: ");
+		assert( NULL != gets_s(name));
+		fprintf(pFile, "Name %d [%-10.10s]\n", n + 1, name);
+	}
+	
+	fclose(pFile);
+}
 /*
 This produces no output. Unless using: dbj::win::console::WideOut
 Which uses no standard handlers (stdin, stdout, stderr)
@@ -12,6 +29,7 @@ int APIENTRY wWinMain(
 )
 {
 	using namespace std;
+	int iVar;
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
@@ -20,46 +38,35 @@ int APIENTRY wWinMain(
 	RedirectIOToConsole();
 	using dbj::win::console::WideOut;
 	WideOut dbj;
-#if 0
-	// this works but uses no standard handles
-	const static wstring doubles = L"\n║═╚";
-	const static wstring singles = L"\n│─└";
-	dbj.print("%",doubles);
-	dbj.print("%",singles);
-#endif
-	int iVar;
+
+	// this works but uses no standard stdio handles
+	const static wstring doubles = L"\n║═╚" ;
+	const static wstring singles = L"\n│─└" ;
+	dbj.print("%\n",doubles);
+	dbj.print("%\n",singles);
+
 	// test stdio
-	assert(0 >= fprintf(stdout, "Test output to stdout\n") );
+	test_std_io();
+
+	assert(0 >=  fprintf(stdout, "Test output to stdout\n") );
 	assert(0 >=  fprintf(stderr, "Test output to stderr\n") );
-	assert(0 >=  fprintf(stdout, "Enter an integer to test stdin: ") );
+	assert(0 >=  fprintf(stdout, "%S", L"Test wide output to stdout\n"));
+	assert(0 >=  fprintf(stderr, "%S", L"Test wide output to stderr\n"));
+
+	assert(0 >= fprintf(stdout, "Enter an integer to test stdin: "));
 #pragma warning ( push )
 #pragma warning ( disable: 4996 )
 	scanf("%d", &iVar);
 #pragma warning ( pop )
 	printf("You entered %d\n", iVar);
-	//test iostreams
-	cout << "Test output to cout" << endl;
-	cerr << "Test output to cerr" << endl;
-	clog << "Test output to clog" << endl;
-	cout << "Enter an integer to test cin: ";
-	cin >> iVar;
-	cout << "You entered " << iVar << endl;
-
-	// test wide iostreams
-	wcout << L"Test output to wcout" << endl;
-	wcerr << L"Test output to wcerr" << endl;
-	wclog << L"Test output to wclog" << endl;
-	wcout << L"Enter an integer to test wcin: ";
-	wcin  >> iVar;
-	wcout << L"You entered " << iVar << endl;
 
 	// test CrtDbg output
-	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
-	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-	_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
-	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+	_CrtSetReportMode(_CRT_ASSERT,	_CRTDBG_MODE_FILE);
+	_CrtSetReportFile(_CRT_ASSERT,	_CRTDBG_FILE_STDERR);
+	_CrtSetReportMode(_CRT_ERROR,	_CRTDBG_MODE_FILE);
+	_CrtSetReportFile(_CRT_ERROR,	_CRTDBG_FILE_STDERR);
+	_CrtSetReportMode(_CRT_WARN,	_CRTDBG_MODE_FILE);
+	_CrtSetReportFile(_CRT_WARN,	_CRTDBG_FILE_STDERR);
 	_RPT0(_CRT_WARN, "\nThis is testing _CRT_WARN output\n");
 	_RPT0(_CRT_ERROR, "\nThis is testing _CRT_ERROR output\n");
 	_ASSERT(0 && "\ntesting _ASSERT");
