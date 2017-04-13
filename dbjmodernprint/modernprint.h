@@ -86,14 +86,10 @@ namespace dbj {
 			no can do for wide strings
 			int const size = _snwprintf_s(nullptr, 0, target.max_size(), format, args ...);
 			*/
-#pragma message ("----------------------------------------------------------")
-#pragma message(__FILE__)
-#pragma message(__FUNCTION__)
-#pragma message("EXTREMELY BAD CLUDGE !!")
-#pragma message ("----------------------------------------------------------")
-			target.resize(back * 2);
-			// buffer, buffercount, maxcount, format, ...
-			assert( std::swprintf(&target[back], target.size(), format, args ...) > -1 );
+			// BUFSIZ == 512 in stdio.h
+			wchar_t buf[BUFSIZ] = {};
+			assert(std::swprintf(buf, BUFSIZ, format, args ...) > -1);
+			target.append(buf);
 		}
 
 		template <typename P, typename ... Args>
@@ -147,7 +143,7 @@ namespace dbj {
 		}
 
 		// wide and normal characters
-
+#if 0
 		template <typename Target, unsigned Count>
 		DBJINLINE void WriteArgument(Target & target, char const (&value)[Count])
 		{
@@ -160,7 +156,7 @@ namespace dbj {
 			// Append(target, ws.data(), ws.size());
 			AppendFormat(target, L"%.*s", ws.size(), ws.data());
 		}
-
+#endif
 		template <typename Target, unsigned Count>
 		DBJINLINE void WriteArgument(Target & target, wchar_t const (&value)[Count])
 		{
@@ -169,7 +165,8 @@ namespace dbj {
 			*/
 			AppendFormat(target, L"%.*s", Count - 1, value);
 		}
-		
+
+#if 0
 		/*
 		What if you don’t specifically or initially need to write output, but instead just 
 		need to calculate how much space would be required ? 
@@ -179,12 +176,18 @@ namespace dbj {
 		{
 			target += size;
 		}
+
 		template <typename ... Args>
 		DBJINLINE void AppendFormat(size_t & target,
 			wchar_t const * const format, Args ... args)
 		{
 			static size_t ms_ = wstring(L"").max_size();
 				target += _snwprintf_s(nullptr, 0, ms_, format, args ...);
+/*
+BUFSIZ == 512 in stdio.h
+wchar_t buf[BUFSIZ] = {};
+assert(std::swprintf(buf, BUFSIZ, format, args ...) > -1);
+*/
 		}
 		/*
 		I can now calculate the required size quite simply :
@@ -193,7 +196,7 @@ namespace dbj {
 		Write(count, L"Hello %", 2015);
 		DBJ_VERIFY(count == wstring(L"Hello 2015").size();
 		*/
-
+#endif
 		/*
 		Anything that implements IPrintable can be used as the source of the WriteArgument
 		This is used to avoid direct coupling with this Write() mechanism
@@ -372,7 +375,7 @@ namespace dbj {
 
 							Write(wtext, L"{ % % % % }", L"0", L"1 2", L"3 4 5", L"6 7 8 9");
 
-							print::F(wtext, L"]---[", wtext, L"]-- - [", __uuidof(IUnknown),"]\n\n");
+							print::F(wtext, L"]---[", wtext, L"]-- - [", __uuidof(IUnknown), L"]\n\n");
 
 							return L"OK: simple test 2";
 				       },
@@ -391,6 +394,7 @@ namespace dbj {
 					DBJ_VERIFY(text == L"{ Jim, Jane, June }");
 					return L"OK: Vector<std::string> printing to std::wstring";
 					},
+#if 0
 				[] {
 					//we can now calculate the required size quite simply :
 					size_t count = 0;
@@ -399,6 +403,7 @@ namespace dbj {
 					DBJ_VERIFY(count == wstring(L"Hello 2015").size());
 					return L"OK: required size counting";
 					},
+#endif
 				[] {
 					wstring text;
 					Write(text, L"{%}", __uuidof(IUnknown));
