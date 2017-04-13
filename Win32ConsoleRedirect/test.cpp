@@ -23,30 +23,20 @@ DBJINLINE void test_std_io()
 This produces no output. Unless using: dbj::win::console::WideOut
 Which uses no standard handlers (stdin, stdout, stderr)
 */
-int APIENTRY wWinMain(
-	_In_		HINSTANCE hInstance,
-	_In_opt_	HINSTANCE hPrevInstance,
-	_In_		LPWSTR    lpCmdLine,
-	_In_		int       nCmdShow
+int APIENTRY test_console_redirect(
 )
 {
 	using namespace std;
 	int iVar;
-
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
-	UNREFERENCED_PARAMETER(nCmdShow);
-
-	RedirectIOToConsole();
+	RedirectIOToConsole( FileMode::U16TEXT);
 	
-
 	// this works but uses no standard stdio handles
 	const static wstring doubles = L"\n║═╚" ;
 	const static wstring singles = L"\n│─└" ;
 	std::wprintf(L"%s\n",doubles.data());
 	std::wprintf(L"%s\n",singles.data());
 
-	// test stdio
+	// test stdio throws the exception
 	test_std_io();
 
 	assert(0 >= fwprintf(stdout, L"Test wide output to stdout\n") );
@@ -77,4 +67,52 @@ int APIENTRY wWinMain(
 	return 0;
 }
 
-//End of File
+int APIENTRY wWinMain(
+	_In_		HINSTANCE hInstance,
+	_In_opt_	HINSTANCE hPrevInstance,
+	_In_		LPWSTR    lpCmdLine,
+	_In_		int       nCmdShow
+)
+{
+	// Convert char* string to a wchar_t* string.  
+	auto cv = [](const char * const orig) {
+		auto newsize = ::strlen(orig) + 1;
+		static std::wstring wcstring = {};
+		wcstring.clear();
+		wcstring.resize(newsize);
+		size_t convertedChars = 0;
+		mbstowcs_s(&convertedChars, &wcstring[0], newsize, orig, _TRUNCATE);
+		return wcstring.data();
+	};
+
+	auto mb = [](const wchar_t * const msg_) {
+		int msgboxID = MessageBoxW(
+			NULL,
+			(LPCWSTR)msg_,
+			(LPCWSTR)TEXT(__FILE__),
+			MB_ICONWARNING | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2
+		);
+	};
+	try {
+		UNREFERENCED_PARAMETER(hInstance);
+		UNREFERENCED_PARAMETER(hPrevInstance);
+		UNREFERENCED_PARAMETER(lpCmdLine);
+		UNREFERENCED_PARAMETER(nCmdShow);
+
+		return test_console_redirect();
+	}
+	catch (std::exception sex_) {
+		mb(cv(sex_.what()));
+	}
+	catch (const wchar_t * sex_) {
+		mb(sex_);
+	}
+	catch (const char * sex_) {
+		mb(cv(sex_));
+	}
+	catch (...) {
+		mb(L"Unknown Exception");
+	}
+	return 0;
+}
+	//End of File

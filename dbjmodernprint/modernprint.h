@@ -296,7 +296,8 @@ assert(std::swprintf(buf, BUFSIZ, format, args ...) > -1);
 				Write(target, format + placeholder + 1, size - placeholder - 1, rest ...);
 			}
 
-			// Ultimately, the compiler will run out of arguments and a non - variadic overload will be required to complete the operation :
+			// Ultimately, the compiler will run out of arguments and a non - variadic 
+			//  overload will be required to complete the operation :
 
 			template <typename Target>
 			DBJINLINE void Write(Target & target, wchar_t const * const value, size_t const size)
@@ -331,7 +332,7 @@ assert(std::swprintf(buf, BUFSIZ, format, args ...) > -1);
 //				DBJ_VERIFY(argsize == strlen(format));
 			dbj::print::Write(wprintf, format, args ...);
 		}
-
+#if 0
 		template <unsigned Count, typename ... Args>
 		DBJINLINE void F(char const (&format)[Count],
 			Args const & ... args)
@@ -339,7 +340,7 @@ assert(std::swprintf(buf, BUFSIZ, format, args ...) > -1);
 #pragma message ( __FUNCTION__ )
 #pragma message ("dbjmodernprint print::F() can not be used for ANSI char's. Please use L\"string literal\"")
 		}
-
+#endif
 	} // print
 } // dbj
 /*
@@ -420,7 +421,7 @@ namespace dbj {
 						Test() : name_(L"class Test : public IPrintable {};") {
 						}
 
-						Test::~Test() {	name_.clear(); }
+						~Test() {	name_.clear(); }
 
 						IPrintable::StringType content() const noexcept {
 							return IPrintable::cast(name_);

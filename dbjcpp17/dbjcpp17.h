@@ -17,8 +17,6 @@ limitations under the License.
 #error UNICODE not defined?
 #endif
 // #include <iostream>
-#include <string>
-#include <vector>
 #include "../dbjfm/dbjfm.h"
 //#include "../dbjtree/dbjtreeprint.h"
 //#include "../dbjtree/dbjtree.h"
