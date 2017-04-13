@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 #if ! defined(STR)
-#define STR2(x) #x
+#define STR2(x) L##x
 #define STR(x) STR2(x)
 #endif
 /* set to 1 if using com */
@@ -32,6 +32,7 @@ limitations under the License.
 #include <wchar.h>
 #include <io.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include <cstdio>
 #include <string>
@@ -42,17 +43,12 @@ limitations under the License.
 #include <functional>
 #include <algorithm>
 
-/*
-This is mandatory.
-Otherwise release version might compile non carefull code into ((void)0)
-Be sure there is only one include of assert and is done this way.
-This is giving us assertion's for a release code too.
-When and if confident remove this NDEBUG undef
-*/
-#ifdef NDEBUG
-#undef NDEBUG
+#ifdef UNICODE
+#define printf  ((void*)0)
+#define fprintf ((void*)0)
+#else
+#error UNICODE is mandatory for __FILE__ to compile
 #endif
-#include <assert.h>
 
 #define DBJINLINE static __forceinline 
 
@@ -86,20 +82,46 @@ DBJINLINE void DBJ_TRACE(wchar_t const * const message, Args ... args) noexcept
 
 namespace dbj {
 
+	/* 
+	DBJ created 2017-04-13
+	DBJ: "I do not know for sure if this is my invention" 
+
+	s1 and s2 are "any" ranges as defined in C++ standard
+	find first s2 in s1
+	return the position relative to the s1 begining
+	return -1 if s2 not found in s1
+
+	NOTE: move semantics implementation seems not to be necessary.
+	template< typename S1, typename S2>
+	auto find_first_of(const S1 && s1, const S2 && s2) ;
+	That would have to use std::forward() for "perfect forwarding" 
+	*/
+	template< typename S1, typename S2>
+	auto find_first_of(const S1 & s1, const S2 & s2) {
+		auto pos_ = std::find_first_of(
+			std::begin(s1), std::end(s1),
+			std::begin(s2), std::end(s2)
+		);
+
+		return (pos_ == std::end(s1) ? -1 : std::distance(std::begin(s1), pos_));
+	}
+
 	namespace str {
+		
 		// http://stackoverflow.com/questions/4804298/how-to-convert-wstring-into-string
-		DBJINLINE
-		std::wstring to_wide(const std::string& str)
+		DBJINLINE std::wstring to_wide(const std::string& str)
 		{
 			using convert_typeX = std::codecvt_utf8<wchar_t>;
-			std::wstring_convert<convert_typeX, wchar_t> converterX;
+			static std::wstring_convert<convert_typeX, wchar_t> converterX;
 			return converterX.from_bytes(str);
 		}
-
+		/*
+		this is here for "symetry" ... dbj.org stuff is UNICODE only
+		*/
 		DBJINLINE std::string to_str (const std::wstring& wstr)
 		{
 			using convert_typeX = std::codecvt_utf8<wchar_t>;
-			std::wstring_convert<convert_typeX, wchar_t> converterX;
+			static std::wstring_convert<convert_typeX, wchar_t> converterX;
 			return converterX.to_bytes(wstr);
 		}
 
@@ -127,12 +149,12 @@ namespace dbj {
   working solution when compared to the same C code wrapped into C++11.
   */
 
-enum { dbj_simple_BUFFER_SIZE = 256 };
+enum { dbj_simple_BUFFER_SIZE = 512 }; // windows BUFSIZ = 512
 
-extern "C" DBJINLINE const wchar_t * const dbj_simple_printError(const wchar_t* msg)
+DBJINLINE const wchar_t * const dbj_simple_lastError(const wchar_t* msg)
 {
 	DWORD eNum;
-	wchar_t sysMsg[256];
+	wchar_t sysMsg[dbj_simple_BUFFER_SIZE];
 	wchar_t* p;
 
 	eNum = GetLastError();
@@ -149,12 +171,14 @@ extern "C" DBJINLINE const wchar_t * const dbj_simple_printError(const wchar_t* 
 	do { *p-- = 0; } while ((p >= sysMsg) &&
 		((*p == '.') || (*p < 33)));
 
-	static wchar_t buf[1024] = L"";
+	static unsigned const bufsiz_ = dbj_simple_BUFFER_SIZE * 2;
+	static wchar_t buf[bufsiz_] = L"";
 	// clean the previous message if any
 	wmemset(buf, L'\0', sizeof(buf) / sizeof(wchar_t));
 	// Make the message
-	assert(swprintf_s(buf, 1024, TEXT("\n\t%s failed with error %d (%s)"), msg, eNum, sysMsg) > 0);
-	// Display the message
+	assert(swprintf_s(buf, bufsiz_, TEXT("\n\t%s failed with error\n %d (%s)\n\n"), msg, eNum, sysMsg) > 0);
+	// Display the message to stdout 
+	// if inside WIN32 app this will "do nothing"
 	wprintf(buf);
 	// Return the message
 	return buf;
@@ -412,16 +436,15 @@ namespace test {
 
 			fflush(stdout);
 			_setmode(_fileno(stdout), _O_U16TEXT);
-
-			printf("CRASH BANG!");
+		wprintf(L"OK!");
+		// printf("%S", L"SURE CRASH!");
 
 		}
 		catch (...) {
 
 			fflush(stdout);
 			_setmode(_fileno(stdout), _O_TEXT);
-
-			printf("NEVER REACHED :( ucrtbased.dll stops the show...");
+		wprintf(L"NEVER REACHED :( ucrtbased.dll stops the show...");
 
 		}
 	}

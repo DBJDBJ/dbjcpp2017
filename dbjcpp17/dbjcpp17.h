@@ -29,50 +29,37 @@ limitations under the License.
 
 namespace dbj { namespace test {
 
-	using std::string;
-	typedef std::function<string()> TestUnit;
-	typedef std::vector<TestUnit> AllUnits;
+	namespace {
+		using std::wstring;
+		typedef std::function<wstring()> TestUnit;
+		typedef std::vector<TestUnit> AllUnits;
 
-	/* DBJ added 
-	   find first s2 in s1
-	   return the position relative to the s1 begining
-	   return -1 if s2 not found in s1
-	*/
-	template< typename S1, typename S2>
-	auto find_first_of(const S1 & s1, const S2 & s2) {
-		auto pos_ = std::find_first_of(
-			std::begin(s1), std::end(s1),
-			std::begin(s2), std::end(s2)
-		);
+		static AllUnits test_units = {
+			[] {
+			  const wchar_t format[] = {L"abra % ka % dabra"};
+			  const wchar_t placeholder[] = {L"%"};
 
-		return ( pos_ == std::end(s1) ? -1 : std::distance( std::begin(s1), pos_ ) );
-	}
+			  auto dbj = dbj::find_first_of(format, placeholder);
 
-	static AllUnits test_units = {
-		[] {
-		  const char format[] = {"abra % ka % dabra"};
-		  const char placeholder[] = {"%"};
+			  if (dbj < 0)
+				  print::F(L"Placeholder % not found in %", placeholder, format);
+			  else
+				  print::F(L"Found placeholder \"%\" in \"%\", at position: %", placeholder, format,
+					  static_cast<int>(dbj)
+				  );
 
-		  auto dbj = find_first_of(format, placeholder);
-
-		  if (dbj < 0 )
-			  dbj::print::Print("Placeholder % not found in %", placeholder, format);
-		  else
-			  dbj::print::Print("Found placeholder \"%\" in \"%\", at position: %", placeholder, format, 
-				  static_cast<int>(dbj)
-			  );
-
-		return "OK: T1 -from->" __FILE__ ;
-		} 
-	};
-
+			return L"OK: T1 -from->" __FILE__ "\tFunction: " TEXT(__FUNCTION__);
+			}
+		};
+	} // anon ns
 	DBJINLINE void do_the_tests()
 	{
 		for (auto tunit : test_units) {
-			 dbj::print::Print("\n%", tunit().data());
+			 print::F(L"\n%", tunit().data());
 		}
 	}
 } } // eof dbj::test
 #define DBJVERSION __DATE__ __TIME__
 #pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
 #pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION )
+#undef DBJVERSION

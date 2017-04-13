@@ -7,55 +7,62 @@
 #include <guiddef.h>
 #include <Unknwnbase.h>
 
-#ifndef _UNICODE
+#ifndef UNICODE
 #error DBJ modernprint requires UNICODE builds
+#error Also make sure not to use char, printf() or any other CRT ANSI function anywhere ...
+#error And please try to achieve that without including tchar.h
 #endif
+
+#define DBJMODERN_LEGACY 0
+
 #define DBJ_PRINT_TEST 1
 #ifndef DBJINLINE
 #define DBJINLINE static __forceinline
 #endif
 
+
 namespace dbj {
+
+	using std::wstring ;
 
 	namespace print {
 
-		static const char PLACEHOLDER = '%';
-
+		static const wchar_t PLACEHOLDER = L'%';
+#if DBJMODERN_LEGACY
 		DBJINLINE void Append(std::string & target,
 			char const * const value, size_t const size)
 		{
 			target.append(value, size);
 		}
-#pragma region DBJ
+#endif
 		/*
 		DBJ: this is a performance hit, but delivers transformation to wide string
 		*/
-		DBJINLINE void Append(std::wstring & target,
-			char const * const value, size_t const size)
+		DBJINLINE void Append(wstring & target,
+			wchar_t const * const value, size_t const size)
 		{
-			std::string s_;
-			Append( s_, value, size);
-			target.append( dbj::str::to_wide(s_) );
+			target.append(value, size);
 		}
-#pragma endregion DBJ
+
+		/* just print to wprintf() basically */
 		template <typename P>
-		DBJINLINE void Append(P target, char const * const value, size_t const size)
+		DBJINLINE void Append(P target, wchar_t const * const value, size_t const size)
 		{
-			target("%.*s", size, value);
+			target(L"%.*s", size, value);
 		}
 
 		DBJINLINE void Append(FILE * target,
-			char const * const value, size_t const size)
+			wchar_t const * const value, size_t const size)
 		{
 			/*
 			Kenny has declared size to be size_t type
-			fprintf requires int for a size argument bellow
+			f(w)printf requires int for a size argument bellow
 			this cast is ok in this case as it defines string
 			precision value only
 			*/
 #pragma warning ( push )
 #pragma warning ( disable: 4267 )
-			fprintf(target, "%.*s",  static_cast<int>(size), value);
+			fwprintf(target, L"%.*s",  static_cast<int>(size), value);
 #pragma warning ( pop )
 		}
 
@@ -66,73 +73,62 @@ namespace dbj {
 		the exception on target.resize(back+size);
 		*/
 		template <typename ... Args>
-		DBJINLINE void AppendFormat(std::string & target,
-			char const * const format, Args ... args)
+		DBJINLINE void AppendFormat(wstring & target,
+			wchar_t const * const format, Args ... args)
 		{
 #pragma warning ( push )
 #pragma warning ( disable: 4267 )
 			int const back = static_cast<int>(target.size());
 #pragma warning ( pop )
-			int const size = snprintf(nullptr, 0, format, args ...);
-			target.resize(back + size);
-			snprintf(&target[back], size + 1, format, args ...);
+			// buffer, buffercount, maxcount, format, ...
+			/*
+			http://en.cppreference.com/w/cpp/io/c/fwprintf
+			no can do for wide strings
+			int const size = _snwprintf_s(nullptr, 0, target.max_size(), format, args ...);
+			*/
+#pragma message ("----------------------------------------------------------")
+#pragma message(__FILE__)
+#pragma message(__FUNCTION__)
+#pragma message("EXTREMELY BAD CLUDGE !!")
+#pragma message ("----------------------------------------------------------")
+			target.resize(back * 2);
+			// buffer, buffercount, maxcount, format, ...
+			assert( std::swprintf(&target[back], target.size(), format, args ...) > -1 );
 		}
-
-#pragma region DBJ
-		/*
-		DBJ: again a performance hit but delivers transformation to wide string
-		*/
-		template <typename ... Args>
-		DBJINLINE void AppendFormat(std::wstring & target,
-			char const * const format, Args ... args)
-		{
-			std::string str_;
-			AppendFormat(str_, format, args ...);
-			target.append( dbj::str::to_wide(str_) );
-		}
-#pragma endregion DBJ
 
 		template <typename P, typename ... Args>
-		DBJINLINE void AppendFormat(P target, char const * const format, Args ... args)
+		DBJINLINE void AppendFormat(P target, wchar_t const * const format, Args ... args)
 		{
 			target(format, args ...);
 		}
 
 		template <typename ... Args>
 		DBJINLINE void AppendFormat(FILE * target,
-			char const * const format, Args ... args)
+			wchar_t const * const format, Args ... args)
 		{
-			fprintf(target, format, args ...);
+			fwprintf(target, format, args ...);
 		}
 
-		/* Internal::Write will pass each argument to a WriteArgument function. Here’s one for strings:*/
+		/* Internal::Write will pass each argument to a WriteArgument function. Here’s one for wstrings:*/
 		template <typename Target>
-		DBJINLINE void WriteArgument(Target & target, std::string const & value)
+		DBJINLINE void WriteArgument(Target & target, wstring const & value)
 		{
 			Append(target, value.c_str(), value.size());
 		}
-#if 1
-#pragma region DBJ
-		template <typename Target>
-		DBJINLINE void WriteArgument(Target & target, const std::wstring & wvalue)
-		{
-			AppendFormat(target, "%.*S", static_cast<int>(wvalue.size()) - 1 , wvalue.c_str());
-		}
-#pragma endregion DBJ
-#endif
+
 		/*Here’s another WriteArgument function for integer arguments:*/
 		template <typename Target>
 		DBJINLINE void WriteArgument(Target & target, int const value)
 		{
-			AppendFormat(target, "%d", value);
+			AppendFormat(target, L"%d", value);
 		}
 		/*complex types can be used as arguments and temporary storage can even be relied upon to format their text representation. Here’s a WriteArgument overload for GUIDs:*/
 		template <typename Target>
 		DBJINLINE void WriteArgument(Target & target, GUID const & value)
 		{
-			wchar_t buffer[39];
+			wchar_t buffer[39] = {};
 			StringFromGUID2(value, buffer, _countof(buffer));
-			AppendFormat(target, "%.*ls", 36, buffer + 1);
+			AppendFormat(target, L"%.*ls", 36, buffer + 1);
 		}
 
 		// Visualizing a Vector
@@ -144,56 +140,58 @@ namespace dbj {
 			{
 				if (i != 0)
 				{
-					WriteArgument(target, ", ");
+					WriteArgument(target, L", ");
 				}
 				WriteArgument(target, values[i]);
 			}
 		}
 
 		// wide and normal characters
+
 		template <typename Target, unsigned Count>
 		DBJINLINE void WriteArgument(Target & target, char const (&value)[Count])
 		{
-			Append(target, value, Count - 1);
+#pragma message ("----------------------------------------------------------")
+#pragma message (__FILE__)
+#pragma message (__FUNCTION__)
+#pragma message ("Please refrain from using char arrays with dbjmodernprint")
+#pragma message ("----------------------------------------------------------")
+			wstring ws = dbj::str::to_wide(value);
+			// Append(target, ws.data(), ws.size());
+			AppendFormat(target, L"%.*s", ws.size(), ws.data());
 		}
+
 		template <typename Target, unsigned Count>
 		DBJINLINE void WriteArgument(Target & target, wchar_t const (&value)[Count])
 		{
 			/*
-			DBJ
 			https://msdn.microsoft.com/en-us/library/tcxf1dw6.aspx
-			replaced ls with S
 			*/
-			AppendFormat(target, "%.*S", Count - 1, value);
+			AppendFormat(target, L"%.*s", Count - 1, value);
 		}
 		
 		/*
-		using the above one can easily and safely write output using different character sets:
-
-		Write(printf, "% %", "Hello", L"World");
-		
-		*/
-
-		/*What if you don’t specifically or initially need to write output, but instead just 
+		What if you don’t specifically or initially need to write output, but instead just 
 		need to calculate how much space would be required ? 
 		No problem, I can simply create a new target that sums it up :*/
 
-		DBJINLINE void Append(size_t & target, char const *, size_t const size)
+		DBJINLINE void Append(size_t & target, wchar_t const *, size_t const size)
 		{
 			target += size;
 		}
 		template <typename ... Args>
 		DBJINLINE void AppendFormat(size_t & target,
-			char const * const format, Args ... args)
+			wchar_t const * const format, Args ... args)
 		{
-			target += snprintf(nullptr, 0, format, args ...);
+			static size_t ms_ = wstring(L"").max_size();
+				target += _snwprintf_s(nullptr, 0, ms_, format, args ...);
 		}
 		/*
 		I can now calculate the required size quite simply :
 
 		size_t count = 0;
-		Write(count, "Hello %", 2015);
-		DBJ_VERIFY(count == strlen("Hello 2015"));
+		Write(count, L"Hello %", 2015);
+		DBJ_VERIFY(count == wstring(L"Hello 2015").size();
 		*/
 
 		/*
@@ -207,7 +205,7 @@ namespace dbj {
 		*/
 		struct IPrintable
 		{
-			typedef wchar_t *  StringType;
+			typedef wstring  StringType;
 			/* 
 			concrete offspring returns its content through here in a single string 
 			other than this we could simply impose a 'contract' on implementors and
@@ -226,15 +224,10 @@ namespace dbj {
 			DBJ added helpers for inheritors 
 			these functions are static so they do not appear in the vtable
 			*/
-			DBJINLINE IPrintable::StringType 
-			  cast ( const std::wstring & t) {
-				return const_cast<IPrintable::StringType>(t.data());
+			DBJINLINE wchar_t * 
+			  cast ( const wstring & t) noexcept {
+				return const_cast<wchar_t *>(t.data());
 			}
-			DBJINLINE IPrintable::StringType
-				cast(const IPrintable::StringType t ) {
-				return const_cast<IPrintable::StringType>(t);
-			}
-
 		};
 
 		/* usage of IPrintable */
@@ -243,9 +236,9 @@ namespace dbj {
 		{
 #ifdef _DEBUG
 			auto content_ = source_.content();
-			AppendFormat(target, "%S", content_);
+			AppendFormat(target, L"%S", content_);
 #else
-			AppendFormat(target, "%S", source_.content());
+			AppendFormat(target, L"%S", source_.content());
 #endif
 		}
 
@@ -254,14 +247,14 @@ namespace dbj {
 
 		template <typename Target, unsigned Count, typename ... Args>
 		DBJINLINE void Write(Target & target,
-			char const (&format)[Count], Args const & ... args)
+			wchar_t const (&format)[Count], Args const & ... args)
 		{
 #if _DEBUG
 			auto place_holder_count = Internal::CountPlaceholders(format);
 			auto num_of_args = sizeof ... (args);
 
 			if (place_holder_count != num_of_args)
-				throw "Write() Exception: number of format arguments placeholders does not match a number of args.";
+				throw L"Write() Exception: number of format arguments placeholders does not match a number of args.";
 #else
 			DBJ_VERIFY(
 					Internal::CountPlaceholders(format) == sizeof ... (args)
@@ -272,14 +265,15 @@ namespace dbj {
 
 		namespace Internal 
 		{
-			DBJINLINE constexpr unsigned CountPlaceholders(char const * const format)
+			DBJINLINE constexpr unsigned CountPlaceholders(wchar_t const * const format)
 			{
 				return (*format == dbj::print::PLACEHOLDER ) +
-					(*format == '\0' ? 0 : CountPlaceholders(format + 1));
+					(*format == L'\0' ? 0 : CountPlaceholders(format + 1));
 			}
 
 			template <typename Target, typename First, typename ... Rest>
-			DBJINLINE void Write(Target & target, char const * const format,
+			DBJINLINE void Write(
+				Target & target, wchar_t const * const format,
 				size_t const size, First const & first, Rest const & ... rest)
 			{
 				// find the position of the firs placeholder in the format string
@@ -290,9 +284,9 @@ namespace dbj {
 				}
 				DBJ_VERIFY(format[placeholder] == dbj::print::PLACEHOLDER );
 				
-				// first append whatever is before the first placeholder
+				// first append to the target whatever is before the first placeholder
 				Append(target, format, placeholder);
-				// now use the function found for the type First
+				// now use the templated function found for the type First
 				WriteArgument(target, first);
 				// recursively proceed with the rest or use the non variadic Write overload
 				// to stop the recursion
@@ -302,7 +296,7 @@ namespace dbj {
 			// Ultimately, the compiler will run out of arguments and a non - variadic overload will be required to complete the operation :
 
 			template <typename Target>
-			DBJINLINE void Write(Target & target, char const * const value, size_t const size)
+			DBJINLINE void Write(Target & target, wchar_t const * const value, size_t const size)
 			{
 				Append(target, value, size);
 			}
@@ -313,30 +307,37 @@ namespace dbj {
 		dbj added 
 		*/
 		template <unsigned Count, typename ... Args>
-		DBJINLINE void Print(char const (&format)[Count],
+		DBJINLINE void F(wchar_t const (&format)[Count],
 			Args const & ... args) 
 		{
 #if _DEBUG
-			if (!std::strstr(format, "%"))
-				throw "Can not start Print() arguments, with a string which has no '%' (aka the placeholder) in it.";
+			if (! wstring(format).find(L"%"))
+				throw L"Can not start print::F() arguments, with a string which has no '%' (aka the placeholder) in it.";
 #endif
-				dbj::print::Write(printf, format, args ...);
+				dbj::print::Write(wprintf, format, args ...);
 		}
 
-		/* Print(1,"Joe", in(*)(), L"Q") */
+		/* print::F(1,"Joe", in(*)(), L"Q") */
 		template <typename ... Args>
-		DBJINLINE void Print( Args const & ... args) 
+		DBJINLINE void F( Args const & ... args) 
 		{
 			const unsigned argsize = sizeof ... (args);
-			char  format[argsize+1] = {} ;
-				std::memset(format,'%', argsize);
-					format[argsize] = '\0';
+			wchar_t  format[argsize+1] = {} ;
+				std::wmemset(format, L'%', argsize);
+					format[argsize] = L'\0';
 //				DBJ_VERIFY(argsize == strlen(format));
-			dbj::print::Write(printf, format, args ...);
+			dbj::print::Write(wprintf, format, args ...);
+		}
+
+		template <unsigned Count, typename ... Args>
+		DBJINLINE void F(char const (&format)[Count],
+			Args const & ... args)
+		{
+#pragma message ( __FUNCTION__ )
+#pragma message ("dbjmodernprint print::F() can not be used for ANSI char's. Please use L\"string literal\"")
 		}
 
 	} // print
-	
 } // dbj
 /*
 TESTING
@@ -345,8 +346,8 @@ namespace dbj {
 	namespace print {
 		namespace test {
 			namespace {
-				using std::string;
-				typedef std::function<string()> TestUnit;
+				using std::wstring;
+				typedef std::function<wstring()> TestUnit;
 				typedef std::vector<TestUnit> AllUnits;
 #if 0
 				DBJINLINE AllUnits & register_unit(TestUnit & tu_ ) {
@@ -359,62 +360,57 @@ namespace dbj {
 				static AllUnits test_units = {
 					[] {
 					std::wstring wtext = {};
-					std::string   text = {};
 
-					Write(text, "{ % }", "0 1 2 3 4 5 6 7 8 9");
-					DBJ_VERIFY(text == "{ 0 1 2 3 4 5 6 7 8 9 }");
-
-					Write(wtext, "{ % % % % }", "0", "1 2", "3 4 5", "6 7 8 9");
+					Write(wtext, L"{ % % % % }", L"0", L"1 2", L"3 4 5", L"6 7 8 9");
 					DBJ_VERIFY(wtext == L"{ 0 1 2 3 4 5 6 7 8 9 }");
 
 
-					return "OK: simple test 1";
+					return L"OK: simple test 1";
 				},
 					[] {
-							std::wstring wtext = {L"\n\n["};
-							std::string   text = {};
+							wstring wtext = {L"\n\n["};
 
-							Write(text, "{ % }", "0 1 2 3 4 5 6 7 8 9");
-							Write(wtext, "{ % % % % }", "0", "1 2", "3 4 5", "6 7 8 9");
+							Write(wtext, L"{ % % % % }", L"0", L"1 2", L"3 4 5", L"6 7 8 9");
 
-							Print(wtext, text, "]---[", wtext, "]-- - [", __uuidof(IUnknown),"]\n\n");
+							print::F(wtext, L"]---[", wtext, L"]-- - [", __uuidof(IUnknown),"]\n\n");
 
-							return "OK: simple test 2";
+							return L"OK: simple test 2";
 				       },
 					[] {
 						std::vector<int> const numbers{ 1, 2, 3, 4, 5, 6 };
-						std::string text;
-						Print("\n{ % }",numbers);
-						Write(text, "{ % }", numbers);
-						DBJ_VERIFY(text == "{ 1, 2, 3, 4, 5, 6 }");
-						return "OK: Vector<int> visualisation";
+						wstring text;
+						print::F(L"\n{ % }",numbers);
+						Write(text, L"{ % }", numbers);
+						DBJ_VERIFY(text == L"{ 1, 2, 3, 4, 5, 6 }");
+						return L"OK: Vector<int> visualisation";
 					},
 				[] {
-					std::vector<std::string> const names{ "Jim", "Jane", "June" };
-					std::string text;
-					Write(text, "{ % }", names);
-					DBJ_VERIFY(text == "{ Jim, Jane, June }");
-					return "OK: Vector<std::string> printing to std::string";
+					std::vector<wstring> const names{ L"Jim", L"Jane", L"June" };
+					wstring text;
+					Write(text, L"{ % }", names);
+					DBJ_VERIFY(text == L"{ Jim, Jane, June }");
+					return L"OK: Vector<std::string> printing to std::wstring";
 					},
 				[] {
 					//we can now calculate the required size quite simply :
 					size_t count = 0;
-					Write(count, "Hello %", 2015);
-					DBJ_VERIFY(count == strlen("Hello 2015"));
-					return "OK: required size counting";
+					Write(count, L"Hello %", 2015);
+					// wcslen()
+					DBJ_VERIFY(count == wstring(L"Hello 2015").size());
+					return L"OK: required size counting";
 					},
 				[] {
-					std::string text;
-					Write(text, "{%}", __uuidof(IUnknown));
-					DBJ_VERIFY(text == "{00000000-0000-0000-C000-000000000046}");
-					Print("\nIUnknown GUID is:[%]", __uuidof(IUnknown));
-					return "OK: GUID printing";
+					wstring text;
+					Write(text, L"{%}", __uuidof(IUnknown));
+					DBJ_VERIFY(text == L"{00000000-0000-0000-C000-000000000046}");
+					print::F(L"\nIUnknown GUID is:[%]", __uuidof(IUnknown));
+					return L"OK: GUID printing";
 					},
 				[]{
 					class Test : public IPrintable
 					{
 						// remember: unicode only
-						std::wstring name_;
+						typename IPrintable::StringType name_;
 					public:
 						Test() : name_(L"class Test : public IPrintable {};") {
 						}
@@ -425,19 +421,20 @@ namespace dbj {
 							return IPrintable::cast(name_);
 						}
 					};
-					Print("\nTest IPrintable object content is: [%]\n", Test());
-					return "OK: IPrintable Object printing";
+					print::F(L"\nTest IPrintable object content is: [%]\n", Test());
+					return L"OK: IPrintable Object printing";
 					}
 				};
 
 				/*
 				see this: http://www.cprogramming.com/c++11/c++11-lambda-closures.html
+				ps: but why?
 				*/
 			} // anon ns
         DBJINLINE void do_the_tests()
 				{
 					for ( auto  tunit : test_units) {
-						Print("\n%", tunit().data());
+						print::F(L"\n%", tunit().data());
 					}
 				}
 		} // test

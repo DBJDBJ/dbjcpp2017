@@ -1,10 +1,12 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <assert.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <fstream>
+#include <cassert>
+#include <corecrt_io.h>
+#include <cwchar>
+#include <string>
+
+#define DBJINLINE static __forceinline
 
 typedef enum {
  TEXT    =    0x4000,  // file mode is text (translated)
