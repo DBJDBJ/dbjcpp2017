@@ -30,8 +30,6 @@ limitations under the License.
 #error And please try to achieve that without including tchar.h
 #endif
 
-#define DBJMODERN_LEGACY 0
-
 #define DBJ_PRINT_TEST 1
 #ifndef DBJINLINE
 #define DBJINLINE static __forceinline
@@ -45,13 +43,7 @@ namespace dbj {
 	namespace print {
 
 		static const wchar_t PLACEHOLDER = L'%';
-#if DBJMODERN_LEGACY
-		DBJINLINE void Append(std::string & target,
-			char const * const value, size_t const size)
-		{
-			target.append(value, size);
-		}
-#endif
+
 		/*
 		DBJ: this is a performance hit, but delivers transformation to wide string
 		*/
@@ -166,21 +158,8 @@ namespace dbj {
 			}
 		}
 
-		// wide and normal characters
-#if 0
-		template <typename Target, unsigned Count>
-		DBJINLINE void WriteArgument(Target & target, char const (&value)[Count])
-		{
-#pragma message ("----------------------------------------------------------")
-#pragma message (__FILE__)
-#pragma message (__FUNCTION__)
-#pragma message ("Please refrain from using char arrays with dbjmodernprint")
-#pragma message ("----------------------------------------------------------")
-			wstring ws = dbj::str::to_wide(value);
-			// Append(target, ws.data(), ws.size());
-			AppendFormat(target, L"%.*s", ws.size(), ws.data());
-		}
-#endif
+		// wide characters
+
 		template <typename Target, unsigned Count>
 		DBJINLINE void WriteArgument(Target & target, wchar_t const (&value)[Count])
 		{
@@ -190,37 +169,6 @@ namespace dbj {
 			AppendFormat(target, L"%.*s", Count - 1, value);
 		}
 
-#if 0
-		/*
-		What if you don’t specifically or initially need to write output, but instead just 
-		need to calculate how much space would be required ? 
-		No problem, I can simply create a new target that sums it up :*/
-
-		DBJINLINE void Append(size_t & target, wchar_t const *, size_t const size)
-		{
-			target += size;
-		}
-
-		template <typename ... Args>
-		DBJINLINE void AppendFormat(size_t & target,
-			wchar_t const * const format, Args ... args)
-		{
-			static size_t ms_ = wstring(L"").max_size();
-				target += _snwprintf_s(nullptr, 0, ms_, format, args ...);
-/*
-BUFSIZ == 512 in stdio.h
-wchar_t buf[BUFSIZ] = {};
-assert(std::swprintf(buf, BUFSIZ, format, args ...) > -1);
-*/
-		}
-		/*
-		I can now calculate the required size quite simply :
-
-		size_t count = 0;
-		Write(count, L"Hello %", 2015);
-		DBJ_VERIFY(count == wstring(L"Hello 2015").size();
-		*/
-#endif
 		/*
 		Anything that implements IPrintable can be used as the source of the WriteArgument
 		This is used to avoid direct coupling with this Write() mechanism
@@ -339,7 +287,7 @@ assert(std::swprintf(buf, BUFSIZ, format, args ...) > -1);
 			Args const & ... args) 
 		{
 #if _DEBUG
-			if (! wstring(format).find(L"%"))
+			if ( -1 ==	dbj::find_first_of(format, L"%") )
 				throw L"Can not start print::F() arguments, with a string which has no '%' (aka the placeholder) in it.";
 #endif
 				dbj::print::Write(wprintf, format, args ...);
