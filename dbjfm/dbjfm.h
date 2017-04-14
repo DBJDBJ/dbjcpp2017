@@ -91,13 +91,23 @@ namespace dbj {
 	return the position relative to the s1 begining
 	return -1 if s2 not found in s1
 
-	NOTE: move semantics implementation seems not to be necessary.
-	template< typename S1, typename S2>
-	auto find_first_of(const S1 && s1, const S2 && s2) ;
-	That would have to use std::forward() for "perfect forwarding" 
+	NOTE1: move semantics implementation not advised here
+	<ode>template< typename S1, typename S2>	auto find_first_of( S1 && s1, S2 && s2) ;</code>
+	Because in that case s1 and s2 are "Universal" references which always would require
+	std::forward<S1>(s1) and std::forward<S2>(s2) 
+	which implies copying or moving. And we do not need any of them in here. Just iteration.
+
+	NOTE2: I could have applied assert_static() here in order to provide meaningfull error messages 
+	if users do pass s1 or s2 which are not the ranges. But, I have decided not to. So in particular be 
+	wary of trying to pass pointers to string literals; they are not C++ ranges:
+
+	const wchar_t * format = L"abra % ka % dabra" ;
+	const wchar_t * placeholder = L"%" ;
+
+	auto dbj = dbj::find_first_of( format, placeholder );
 	*/
 	template< typename S1, typename S2>
-	auto find_first_of(const S1 & s1, const S2 & s2) {
+	DBJINLINE auto find_first_of(const S1 & s1, const S2 & s2) {
 		auto pos_ = std::find_first_of(
 			std::begin(s1), std::end(s1),
 			std::begin(s2), std::end(s2)
@@ -106,6 +116,23 @@ namespace dbj {
 		return (pos_ == std::end(s1) ? -1 : std::distance(std::begin(s1), pos_));
 	}
 
+	/*
+	http://en.cppreference.com/w/cpp/algorithm/iter_swap
+	DBJ: I will show here one very speculative optimization
+	*/
+	template<class ForwardIt> DBJINLINE
+	void selection_sort(ForwardIt begin, ForwardIt end)
+	{
+		for (ForwardIt i = begin; i != end; ++i)
+			std::iter_swap(i, std::min_element(i, end));
+	}
+
+	template<typename R> DBJINLINE void selection_sort(R & range_)
+	{
+		selection_sort(std::begin(range_), std::end(range_));
+	}
+	/*
+	*/
 	namespace str {
 		
 		// http://stackoverflow.com/questions/4804298/how-to-convert-wstring-into-string
@@ -136,17 +163,65 @@ namespace dbj {
 
 	} // eof namespace str
 
-	namespace utl {
-		DBJINLINE std::exception make_exception(const std::wstring & ws) {
-			return std::exception(str::to_str(ws).data());
+	/*
+	DBJ Exception
+	*/
+	class exception
+	{
+		std::wstring dbj_exception_data_;
+	public:
+
+		exception() throw()
+			: dbj_exception_data_()
+		{
 		}
-	} // eof namespace utl
+
+		explicit exception(wchar_t const* const _Message) throw()
+			: dbj_exception_data_(_Message)
+		{
+		}
+
+		/* copy from std::exception */
+		exception(const std::exception & ws) throw() {
+			dbj_exception_data_ = str::to_wide(ws.what());
+		}
+
+		exception(const std::wstring & _Message ) throw()
+			: dbj_exception_data_(_Message)
+		{
+		}
+
+		exception(exception const& _Other) throw()
+			: dbj_exception_data_()
+		{
+			dbj_exception_data_ = _Other.dbj_exception_data_;
+		}
+
+		exception& operator=(exception const& _Other) throw()
+		{
+			if (this == &_Other) return *this;
+
+			dbj_exception_data_.clear() ;
+			dbj_exception_data_ = _Other.dbj_exception_data_;
+			return *this;
+		}
+
+		virtual ~exception() throw()
+		{
+			dbj_exception_data_.clear();
+		}
+
+		virtual wchar_t const* what() const
+		{
+			return dbj_exception_data_.data() ? dbj_exception_data_.data() : L"Unknown exception";
+		}
+	};
 
 } // eof dbj
   
   /*
   Stuff bellow is C. This may look like a kludge. But it is beautifully simple and
-  working solution when compared to the same C code wrapped into C++11.
+  working solutions when compared to the same C code wrapped into C++11.
   */
 
 enum { dbj_simple_BUFFER_SIZE = 512 }; // windows BUFSIZ = 512
@@ -154,29 +229,29 @@ enum { dbj_simple_BUFFER_SIZE = 512 }; // windows BUFSIZ = 512
 DBJINLINE const wchar_t * const dbj_simple_lastError(const wchar_t* msg)
 {
 	DWORD eNum;
-	wchar_t sysMsg[dbj_simple_BUFFER_SIZE];
-	wchar_t* p;
+	std::wstring sysMsg; sysMsg.resize(dbj_simple_BUFFER_SIZE);
 
 	eNum = GetLastError();
 	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
 		FORMAT_MESSAGE_IGNORE_INSERTS,
 		NULL, eNum,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		sysMsg, 256, NULL);
-
+		&(sysMsg[0]), 256, NULL);
+#if 0
+	wchar_t* p;
 	// Trim the end of the line and terminate it with a null
 	p = sysMsg;
 	while ((*p > 31) || (*p == 9))
 		++p;
 	do { *p-- = 0; } while ((p >= sysMsg) &&
 		((*p == '.') || (*p < 33)));
-
+#endif
 	static unsigned const bufsiz_ = dbj_simple_BUFFER_SIZE * 2;
 	static wchar_t buf[bufsiz_] = L"";
 	// clean the previous message if any
 	wmemset(buf, L'\0', sizeof(buf) / sizeof(wchar_t));
 	// Make the message
-	assert(swprintf_s(buf, bufsiz_, TEXT("\n\t%s failed with error\n %d (%s)\n\n"), msg, eNum, sysMsg) > 0);
+	assert(std::swprintf(buf, bufsiz_, TEXT("\n\t%s failed with error\n %d (%s)\n\n"), msg, eNum, sysMsg.data()) > 0);
 	// Display the message to stdout 
 	// if inside WIN32 app this will "do nothing"
 	wprintf(buf);

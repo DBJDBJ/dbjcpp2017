@@ -52,7 +52,7 @@ namespace dbj {
 				dllHandle_ = ::LoadLibrary(libpath);
 				// address of filename of executable module 
 				if (NULL == dllHandle_)
-					throw dbj::utl::make_exception(L"Could not find the DLL named: " + dllName_);
+					throw dbj::exception(L"Could not find the DLL named: " + dllName_);
 			}
 			/*
 			FreeLibrary() failure is very rare and might signal some deep error with the machines or OS

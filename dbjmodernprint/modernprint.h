@@ -118,6 +118,12 @@ namespace dbj {
 		{
 			AppendFormat(target, L"%d", value);
 		}
+		// DBJ added for wchar_t
+		template <typename Target>
+		DBJINLINE void WriteArgument(Target & target, const wchar_t & value)
+		{
+			AppendFormat(target, L"%c", value);
+		}
 		/*complex types can be used as arguments and temporary storage can even be relied upon to format their text representation. Here’s a WriteArgument overload for GUIDs:*/
 		template <typename Target>
 		DBJINLINE void WriteArgument(Target & target, GUID const & value)

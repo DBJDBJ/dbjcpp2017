@@ -26,11 +26,11 @@ int main()
 	using std::wstring;
 	    wcout << "\n\nDBJCPP17 -- Modern C++ 2017 by DBJDBJ <dbj@dbj.org>  \n\n";
 	try {
+		dbj::test::do_the_tests();
 		dbj::win::console::test::test_crash_console_output();
 		dbj::print::test::do_the_tests();
 #if 0		
 		dbj::win::test::test_dbjLibload();
-		dbj::test::do_the_tests();
 		dbj::win::console::the_std_way();
 		dbj::win::console::test_wide_output();
 		dbj::win::console::basic_test();

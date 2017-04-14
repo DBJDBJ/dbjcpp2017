@@ -34,10 +34,11 @@ namespace dbj { namespace test {
 
 		static AllUnits test_units = {
 			[] {
+			  
 			  const wchar_t format[] = {L"abra % ka % dabra"};
 			  const wchar_t placeholder[] = {L"%"};
 
-			  auto dbj = dbj::find_first_of(format, placeholder);
+			  auto dbj = dbj::find_first_of( format, placeholder );
 
 			  if (dbj < 0)
 				  print::F(L"Placeholder % not found in %", placeholder, format);
@@ -47,6 +48,14 @@ namespace dbj { namespace test {
 				  );
 
 			return L"OK: T1 -from->" __FILE__ "\tFunction: " TEXT(__FUNCTION__);
+			},
+			[] {
+				std::vector<wchar_t> vec = { L'W', L'Z', L'Y', L'X', L'9', L'8', L'7' };
+
+				print::F(L"\n\nUnsorted %", vec);
+						dbj::selection_sort( vec );
+				print::F(L"\nSorted %", vec);
+				return L"\n\nOK: T2 -from->" __FILE__ "\tFunction: " TEXT(__FUNCTION__);
 			}
 		};
 	} // anon ns
