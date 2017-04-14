@@ -1,4 +1,21 @@
 #pragma once
+/* 
+Copyright 2017 dbj@dbj.org
+
+Inspired with: https://msdn.microsoft.com/magazine/dn973010
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http ://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 
 #include <string>
 #include <vector>
@@ -111,6 +128,7 @@ namespace dbj {
 		{
 			Append(target, value.c_str(), value.size());
 		}
+
 
 		/*Here’s another WriteArgument function for integer arguments:*/
 		template <typename Target>
@@ -245,9 +263,9 @@ assert(std::swprintf(buf, BUFSIZ, format, args ...) > -1);
 		{
 #ifdef _DEBUG
 			auto content_ = source_.content();
-			AppendFormat(target, L"%S", content_);
+			AppendFormat(target, L"%s", content_);
 #else
-			AppendFormat(target, L"%S", source_.content());
+			AppendFormat(target, L"%s", source_.content());
 #endif
 		}
 
@@ -424,17 +442,17 @@ namespace dbj {
 						// remember: unicode only
 						typename IPrintable::StringType name_;
 					public:
-						Test() : name_(L"class Test : public IPrintable {};") {
+						Test() : name_(L"class Test : public IPrintable {}; file:" __FILE__ ) {
 						}
 
 						~Test() {	name_.clear(); }
 
 						IPrintable::StringType content() const noexcept {
-							return IPrintable::cast(name_);
+							return name_ ;
 						}
 					};
-					print::F(L"\nTest IPrintable object content is: [%]\n", Test());
-					return L"OK: IPrintable Object printing";
+					print::F(L"\n\nTest IPrintable object content is: [%]\n", Test());
+					return L"\nOK: IPrintable Object printing";
 					}
 				};
 
@@ -452,4 +470,11 @@ namespace dbj {
 		} // test
 	} // print
 } // dbj
+#define DBJVERSION __DATE__ __TIME__
+#pragma message("")
+#pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
+#pragma message("")
+#pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION ) 
+#undef DBJVERSION
+
 

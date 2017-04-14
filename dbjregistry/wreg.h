@@ -1,9 +1,4 @@
 #pragma once
-#define DBJVERSION __DATE__ __TIME__
-#pragma message("")
-#pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
-#pragma message("")
-#pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION ) 
 /* Copyright 2017 dbj@dbj.org
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -1163,5 +1158,10 @@ namespace winreg
 	/*--------------------------------------------------------------*/
 
 } // namespace winreg
-
+#define DBJVERSION __DATE__ __TIME__
+#pragma message("")
+#pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
+#pragma message("")
+#pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION ) 
+#undef DBJVERSION
 
