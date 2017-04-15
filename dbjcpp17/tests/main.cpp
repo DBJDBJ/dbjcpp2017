@@ -69,7 +69,11 @@ int main()
 }
 #endif
 
-#pragma comment(lib, "dbjunittest++.lib")
+/*
+visual studio solution appends the output of the dbjunittest++ project
+so we do not need this in here.
+*/
+// #pragma comment(lib, "dbjunittest++.lib")
 
 #define DBJVERSION __DATE__ __TIME__
 #pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)

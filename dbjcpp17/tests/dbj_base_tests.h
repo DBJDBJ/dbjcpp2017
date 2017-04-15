@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 /* Copyright 2017 dbj@dbj.org
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,18 @@ SUITE( dbj_basic_tests ) {
 
 	using namespace dbj ;
 
-		 TEST(find_first_of) {
+		TEST(__wide_out__) {
+
+			win::console::WideOut wout;
+			const static std::wstring doubles = L"║═╚";
+			const static std::wstring singles = L"│─└";
+
+			wout.print("\nOnly words: [%], and numbers: [%][%]", L"WORD", 12.34, 0x13);
+			wout.print("\nAnd now the unicode squigly bits: [%][%]", doubles, singles);
+
+		 }
+
+		 TEST(__find_first_of__) {
 
 			 win::console::WideOut wout;
 
@@ -51,7 +62,7 @@ SUITE( dbj_basic_tests ) {
 				DBJ_TRACE(L"\nFinished: %s, file: %s", TEXT(__FUNCTION__), TEXT(__FILE__));
 		 }
 
-		 TEST(selection_sort) {
+		 TEST(__selection_sort__) {
 			 win::console::WideOut wout;
 			 
 			 std::vector<wchar_t> vec = { L'W', L'Z', L'Y', L'X', L'9', L'8', L'7' };

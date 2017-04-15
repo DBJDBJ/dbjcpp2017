@@ -21,8 +21,6 @@ limitations under the License.
 #endif
 /* set to 1 if using com */
 #define DBJCOM 0
-/* seto ti 1 to test Policy-es */
-#define DBJPOLICY 0
 
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
@@ -44,8 +42,7 @@ limitations under the License.
 #include <algorithm>
 
 #ifdef UNICODE
-#define printf  ((void*)0)
-#define fprintf ((void*)0)
+;
 #else
 #error UNICODE is mandatory for __FILE__ to compile
 #endif
@@ -54,7 +51,7 @@ limitations under the License.
 
 // Taken from MODERN v1.26 - http://moderncpp.com
 // Copyright (c) 2015 Kenny Kerr
-#pragma region
+#pragma region Independent debug things
 #ifdef _DEBUG
 #define DBJ_ASSERT assert
 #define DBJ_VERIFY DBJ_ASSERT
@@ -321,82 +318,6 @@ namespace dbj {
 	static COUNTER<f1,f2> the_counter__;
 	*/
 #pragma endregion single counter
-#if DBJPOLICY
-	namespace policy {
-		using std::wstring;
-
-		struct DefaultDeletingPolicy {
-			template <typename O> 
-			  void del (O * op_) const {
-				  op_ ? std::default_delete<O>(op_):(void); op_ = nullptr;
-			}
-
-			  template <typename O>
-			  void del(O * op_ [] ) const {
-				  op_ ? std::default_delete<O[]>(op_) : (void); op_ = nullptr;
-			  }
-
-			  template <typename O>
-			  void del(O & op_) const {
-				  if (!std::is_empty<O>::value)
-					  op_.~O();
-			  }
-		};
-		/*
-		optimization of
-		https://en.wikipedia.org/wiki/Policy-based_design
-		*/
-		/*
-		OPT 1: use default template arguments
-		LOGIC: make API simpler. simpler code leads to less bugs
-		*/
-class WideWriterPolicy;
-class LanguagePolicyEnglish;
-class LanguagePolicyGerman;
-
-template <typename LanguagePolicy = LanguagePolicyEnglish , typename OutputPolicy = WideWriterPolicy >
-class HelloWorld 
-{
-
-public:
-	// Behaviour method
-	void run( ) const
-	{
-		// not made before this point; if ever.
-		static LanguagePolicy language{};
-		static OutputPolicy printer{};
-		// Two policy methods
-		printer.print(language.message());
-	}
-};
-
-		struct WideWriterPolicy
-		{
-			template<typename MessageType>
-			void print(MessageType const &message) const
-			{
-				std::wcout << message << std::endl;
-			}
-		};
-
-		struct LanguagePolicyEnglish
-		{
-			wstring message() const
-			{
-				return L"Hello, World!";
-			}
-		};
-
-		struct LanguagePolicyGerman
-		{
-			wstring message() const
-			{
-				return L"Hallo Welt!";
-			}
-		};
-
-	} // policy
-#endif
 
 	/* string length size_t to DWORD to pacify the MSVC */
 	DBJINLINE DWORD len2dword (const wchar_t * ws_) {
@@ -416,7 +337,11 @@ public:
 
 	namespace win {
 		namespace console {
-
+/*
+Not FILE * but HANDLE based output.
+It also uses Windows.1252 Code Page.
+This two are perhaps why this almost always works.
+*/
 struct __declspec(novtable)	WideOut
 	{
 	HANDLE output_handle_;
@@ -438,6 +363,13 @@ struct __declspec(novtable)	WideOut
 			/*			TODO: GetLastError()  		*/
 		}
 
+		template<typename N>
+		void operator () (const N & number_) {
+					// static_assert( std::is_arithmetic<N>::value);
+			std::wstring sn_ = std::to_wstring(number_);
+			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, sn_.data(), len2dword(sn_.data()), NULL, NULL));
+		}
+
 		void operator () (const wchar_t * const wp_) {
 			DBJ_VERIFY( 0 != ::WriteConsoleW(this->output_handle_, wp_, len2dword(wp_), NULL, NULL));
 		}
@@ -448,7 +380,17 @@ struct __declspec(novtable)	WideOut
 				NULL, NULL));
 		}
 
-		void operator () (const char * wp_) {
+		void operator () (const wchar_t & wp_) {
+			wchar_t str[] = { wp_, L'\0' };
+			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, str, len2dword(str), NULL, NULL));
+		}
+
+		void operator () (const char & wp_) {
+			char str[] = { wp_, '\0' };
+			DBJ_VERIFY(0 != ::WriteConsoleA(this->output_handle_, str, len2dword(str), NULL, NULL));
+		}
+
+		void operator () (const char * const wp_) {
 			DBJ_VERIFY(0 != ::WriteConsoleA(this->output_handle_, wp_, len2dword(wp_), NULL, NULL));
 		}
 
@@ -464,7 +406,12 @@ struct __declspec(novtable)	WideOut
 		{
 			(*this)(format);
 		}
-
+		/*
+			Primitive print(). Tries to handle "words" and "numbers".
+			'%' is a replacement token
+			No type designators
+			No field width or precision values
+		*/
 		template<typename T, typename... Targs>
 		void print(const char* format, T value, Targs... Fargs) // recursive variadic function
 		{
@@ -474,7 +421,7 @@ struct __declspec(novtable)	WideOut
 					print(format + 1, Fargs...); // recursive call
 					return;
 				}
-				this->operator()( dbj::chr2str(*format) ); // this calls with 'const char'
+				this->operator()( *format ); // this calls with 'const char'
 			}
         }
 
@@ -631,28 +578,6 @@ namespace test {
 		} // com
 #endif // DBJCOM
 	} // win
-
-#if DBJPOLICY
-	namespace test {
-		void dbj_policy_testing () {
-			using namespace dbj::policy;
-
-			/*OPT1 WideWriterPolicy is default*/
-			typedef HelloWorld<> HelloWorldEnglish;
-
-			/* english is default */
-			HelloWorld<> hello_world;
-			hello_world.run(); // prints "Hello, World!"
-
-			/* Use another language policy */
-			/*OPT1 WideWriterPolicy is default*/
-			typedef HelloWorld<LanguagePolicyGerman> HelloWorldGerman;
-
-			HelloWorldGerman hello_world2;
-			hello_world2.run(); // prints "Hallo Welt!"
-		}
-	}// test
-#endif
 } // dbj
 
   /*
