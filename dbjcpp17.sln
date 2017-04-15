@@ -5,9 +5,9 @@ VisualStudioVersion = 15.0.26228.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dbjtests", "dbjcpp17\dbjcpp17.vcxproj", "{18F8A4D8-7183-475C-92DD-42D643D6B516}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32ConsoleRedirect", "Win32ConsoleRedirect\Win32ConsoleRedirect.vcxproj", "{BA2A2D23-A2A6-4063-9934-8904C50151AE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32ConsoleProblem", "Win32ConsoleRedirect\Win32ConsoleRedirect.vcxproj", "{BA2A2D23-A2A6-4063-9934-8904C50151AE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dbjunittest++", "..\unittest-cpp\UnitTest++\dbjunittest++.vcxproj", "{588FB7AF-5082-4BCC-8559-9ED62F17D2F5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dbjunittest++", "UnitTest++\dbjunittest++.vcxproj", "{588FB7AF-5082-4BCC-8559-9ED62F17D2F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
