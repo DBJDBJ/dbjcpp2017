@@ -63,8 +63,9 @@ template <typename ... Args>
 DBJINLINE void DBJ_TRACE(wchar_t const * const message, Args ... args) noexcept
 {
 	wchar_t buffer[512] = {};
-	swprintf_s(buffer, message, args ...);
-	OutputDebugString(buffer);
+	std::swprintf(buffer, 512, message, args ...);
+//	OutputDebugStringW(buffer);
+	wprintf(L"\n%s\n",buffer);
 }
 #else
 // code dissapears

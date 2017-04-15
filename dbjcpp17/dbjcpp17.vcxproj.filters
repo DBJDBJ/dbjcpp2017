@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dbjcpp17.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\dbjfm\dbjfm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,9 +39,15 @@
     <ClInclude Include="..\dbjtree\dbjtreeprint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tests\dbj_base_tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dbjcpp17.cpp">
+    <ClCompile Include="tests\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

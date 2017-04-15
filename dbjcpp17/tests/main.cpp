@@ -14,11 +14,30 @@ limitations under the License.
 */
 // Portions of registry API usage inspired by WinReg(c) of Giovanni Dicanio <giovanni.dicanio@gmail.com>
 
+/* Copyright 2017 dbj@dbj.org
 
-#include "dbjcpp17.h"
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
+http ://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+#include "main.h"
+
+int main(int, const char *[])
+{
+	return UnitTest::RunAllTests();
+}
 /*
 */
+#if 0
 int main()
 {
 	using std::wcout;
@@ -29,16 +48,12 @@ int main()
 		dbj::test::do_the_tests();
 		dbj::win::console::test::test_crash_console_output();
 		dbj::print::test::do_the_tests();
-#if 0		
 		dbj::win::test::test_dbjLibload();
 		dbj::win::console::the_std_way();
 		dbj::win::console::test_wide_output();
 		dbj::win::console::basic_test();
-#if DBJPOLICY
 		dbj::test::dbj_policy_testing();
-#endif
 		dbj::tree::binary_node_test(wcout);
-#endif
 	}
 	catch (std::exception & ex_) {
 		wcerr << "std::exception: " << ex_.what() << "\n" ;
@@ -52,3 +67,11 @@ int main()
 	// eof main
 	return 0;
 }
+#endif
+
+#pragma comment(lib, "dbjunittest++.lib")
+
+#define DBJVERSION __DATE__ __TIME__
+#pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
+#pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION )
+#undef DBJVERSION
