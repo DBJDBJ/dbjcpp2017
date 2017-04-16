@@ -24,24 +24,61 @@ limitations under the License.
 // #include "../../dbjmodernprint/modernprint.h"
 // #include "../../dbjlibload/dbjlibloadtest.h"
 
-#include <UnitTest++\UnitTest++.h>
+// #include <UnitTest++\UnitTest++.h>
+#include "../../dbjgtest/gtest.h"
 
-SUITE( dbj_basic_tests ) {
+namespace {
 
 	using namespace dbj ;
+		/*
+		http://en.cppreference.com/w/cpp/locale/locale
+		use no ios veriosn of this to check if we have 
+		standard iso cpp behaviour on this platform
 
-		TEST(__wide_out__) {
+		MS-Windows character sets:
+
+		Windows-1250 for Central European languages that use Latin script, 
+		(Polish, Czech, Slovak, Hungarian, Slovene, Serbian, Croatian, Bosnian, Romanian and Albanian)
+		Windows-1251 for Cyrillic alphabets
+		Windows-1252 for Western languages
+		Windows-1253 for Greek
+		Windows-1254 for Turkish
+		Windows-1255 for Hebrew
+		Windows-1256 for Arabic
+		Windows-1257 for Baltic languages
+		Windows-1258 for Vietnamese
+		*/
+		TEST(dbj_basic_tests, __switch_to_user_locale__) {
+			wprintf(  L"\n");
+			printf(    "\nUser-preferred locale setting is %s" , std::locale().name().c_str() ) ;
+			wprintf(  L"\non startup, the global locale is the \"C\" locale");
+			wprintf(  L"\noutput the number 1000.01:  %.2f", 1000.01 ) ;
+			auto enloc = std::locale("en-UK");
+			printf("\nreplace the C++ global locale as well as the C locale with the user-preferred locale: %s", 
+				enloc.name().data()
+			);
+			std::locale::global(enloc) ;
+			wprintf(L"\nuse the new global locale for future wide character output");
+			// std::wcout.imbue(std::locale())) ;
+			wprintf( L"\noutput the same number again: %.2f", 1000.01 ) ;
+			wprintf( L"\n");
+		}
+
+		TEST(dbj_basic_tests, __wide_out__) {
 
 			win::console::WideOut wout;
 			const static std::wstring doubles = L"║═╚";
 			const static std::wstring singles = L"│─└";
 
 			wout.print("\nOnly words: [%], and numbers: [%][%]", L"WORD", 12.34, 0x13);
-			wout.print("\nAnd now the unicode squigly bits: [%][%]", doubles, singles);
+			wout.print("\nAnd now the unicode squigly bits: [%][%]\n", doubles, singles);
 
-		 }
+			wprintf(L"\nWPRINTF attempt: [%s][%s]\n", doubles.data(), singles.data());
 
-		 TEST(__find_first_of__) {
+			printf("\nPRINTF attempt: [%S][%S]\n", doubles.data(), singles.data());
+		}
+
+		 TEST(dbj_basic_tests, __find_first_of__) {
 
 			 win::console::WideOut wout;
 
@@ -50,7 +87,7 @@ SUITE( dbj_basic_tests ) {
 
 				auto dbj = dbj::find_first_of(format, placeholder);
 
-				REQUIRE CHECK(&dbj);
+				EXPECT_NO_FATAL_FAILURE(&dbj);
 
 				if (dbj < 0)
 					DBJ_TRACE(L"\nPlaceholder %s not found in %s", placeholder, format);
@@ -59,18 +96,24 @@ SUITE( dbj_basic_tests ) {
 						static_cast<int>(dbj)
 					);
 
-				DBJ_TRACE(L"\nFinished: %s, file: %s", TEXT(__FUNCTION__), TEXT(__FILE__));
 		 }
 
-		 TEST(__selection_sort__) {
-			 win::console::WideOut wout;
-			 
-			 std::vector<wchar_t> vec = { L'W', L'Z', L'Y', L'X', L'9', L'8', L'7' };
+		 template<typename R>
+		 DBJINLINE std::wstring range_to_string(const R & range_) {
+			 std::wstring ws(std::begin(range_),std::end(range_));
+			 return ws;
+		 }
 
-				DBJ_TRACE(L"\n\nUnsorted %s", vec);
+		 TEST(dbj_basic_tests, __selection_sort__) 
+		 {
+			 win::console::WideOut wo;
+
+			 std::vector<wchar_t> vec = { L'W', L'Z', L'Y', L'X', L'9', L'8', L'7' };
+				wo.print("\n\nUnsorted %", range_to_string(vec));
 				dbj::selection_sort(vec);
-				DBJ_TRACE(L"\nSorted %s", vec);
-				DBJ_TRACE(L"\nFinished: %s, file: %s", TEXT(__FUNCTION__), TEXT(__FILE__));
+				wo.print("\nSorted %\n\n", range_to_string(vec));
+
+				
 		 }
 
 } // eof dbj basic tests suite

@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <UnitTest++/UnitTest++.h>
+//#include <UnitTest++/UnitTest++.h>
+#include "../../dbjgtest/gtest.h"
 #include "dbj_base_tests.h"
 
 #if 0

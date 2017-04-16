@@ -20,33 +20,33 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{18F8A4D8-7183-475C-92DD-42D643D6B516}</ProjectGuid>
-    <RootNamespace>dbjcpp17</RootNamespace>
+    <ProjectGuid>{7A46B719-FE17-4DE6-8A3E-7704E81E8FA2}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>dbjgtest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
-    <ProjectName>dbjtests</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -70,39 +70,43 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\dbj\DEVENV\include;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\dbj\DEVENV\include;$(IncludePath)</IncludePath>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\dbj\DEVENV;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
@@ -110,40 +114,60 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\dbj\DEVENV;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\dbjfm\dbjfm.h" />
-    <ClInclude Include="..\dbjmodernprint\modernprint.h" />
-    <ClInclude Include="..\dbjregistry\dbjreg.h" />
-    <ClInclude Include="..\dbjregistry\dbjregtest.h" />
-    <ClInclude Include="..\dbjregistry\wreg.h" />
-    <ClInclude Include="..\dbjtree\dbjdatadeletor.h" />
-    <ClInclude Include="..\dbjtree\dbjtree.h" />
-    <ClInclude Include="..\dbjtree\dbjtreeprint.h" />
-    <ClInclude Include="tests\main.h" />
-    <ClInclude Include="tests\dbj_base_tests.h" />
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tests\main.cpp" />
+    <ClCompile Include="gtest-death-test.cc" />
+    <ClCompile Include="gtest-filepath.cc" />
+    <ClCompile Include="gtest-port.cc" />
+    <ClCompile Include="gtest-printers.cc" />
+    <ClCompile Include="gtest-test-part.cc" />
+    <ClCompile Include="gtest-typed-test.cc" />
+    <ClCompile Include="gtest.cc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\dbjgtest\dbjgtest.vcxproj">
-      <Project>{7a46b719-fe17-4de6-8a3e-7704e81e8fa2}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\UnitTest++\dbjunittest++.vcxproj">
-      <Project>{588fb7af-5082-4bcc-8559-9ed62f17d2f5}</Project>
-    </ProjectReference>
+    <ClInclude Include="gtest-death-test.h" />
+    <ClInclude Include="gtest-internal-inl.h" />
+    <ClInclude Include="gtest-message.h" />
+    <ClInclude Include="gtest-param-test.h" />
+    <ClInclude Include="gtest-printers.h" />
+    <ClInclude Include="gtest-spi.h" />
+    <ClInclude Include="gtest-test-part.h" />
+    <ClInclude Include="gtest-typed-test.h" />
+    <ClInclude Include="gtest.h" />
+    <ClInclude Include="gtest_pred_impl.h" />
+    <ClInclude Include="gtest_prod.h" />
+    <ClInclude Include="internal\custom\gtest-port.h" />
+    <ClInclude Include="internal\custom\gtest-printers.h" />
+    <ClInclude Include="internal\custom\gtest.h" />
+    <ClInclude Include="internal\gtest-death-test-internal.h" />
+    <ClInclude Include="internal\gtest-filepath.h" />
+    <ClInclude Include="internal\gtest-internal.h" />
+    <ClInclude Include="internal\gtest-linked_ptr.h" />
+    <ClInclude Include="internal\gtest-param-util-generated.h" />
+    <ClInclude Include="internal\gtest-param-util.h" />
+    <ClInclude Include="internal\gtest-port-arch.h" />
+    <ClInclude Include="internal\gtest-port.h" />
+    <ClInclude Include="internal\gtest-string.h" />
+    <ClInclude Include="internal\gtest-tuple.h" />
+    <ClInclude Include="internal\gtest-type-util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="gtest-param-test.h.pump" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
