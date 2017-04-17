@@ -136,7 +136,7 @@ namespace dbj {
 	with no delimiters between elements
 	*/
 	template<typename R>
-	DBJINLINE std::wstring range_to_string(const R & range_) {
+	DBJINLINE std::wstring implode_to_string(const R & range_) {
 		std::wstring ws(std::begin(range_), std::end(range_));
 		return ws;
 	}
@@ -161,7 +161,7 @@ namespace dbj {
 	default delim is ":"
 	*/
 	template<typename R>
-	DBJINLINE std::wstring range_to_string(const R & range_, const wchar_t delim ) {
+	DBJINLINE std::wstring range_to_string(const R & range_, const wchar_t delim = ':' ) {
 
 		typedef Rez< R::value_type > Result;
 		Result retval = std::for_each(std::begin(range_), std::end(range_), Result(delim));

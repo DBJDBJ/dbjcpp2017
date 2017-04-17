@@ -199,9 +199,9 @@ namespace {
 		 {
 			 win::console::WideOut wo;
 			 std::vector<wchar_t> vec = { L'W', L'Z', L'Y', L'X', L'9', L'8', L'7' };
-				wo.print("\n\nUnsorted %", range_to_string(vec, L':'));
+				wo.print("\n\nUnsorted %", range_to_string(vec));
 				dbj::selection_sort(vec);
-				wo.print("\nSorted %\n\n", range_to_string(vec, L':'));
+				wo.print("\nSorted %\n\n", range_to_string(vec));
 		 }
 
 } // eof dbj basic tests suite
