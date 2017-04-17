@@ -45,6 +45,9 @@
     <ClInclude Include="tests\main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tests\dbj_wide_console_solution.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tests\main.cpp">

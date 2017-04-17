@@ -43,6 +43,13 @@ namespace dbj {
 	namespace print {
 
 		static const wchar_t PLACEHOLDER = L'%';
+		/*
+		Unicode applications should always cast zero to TCHAR when using null-terminated strings. 
+		The code 0x0000 is the Unicode string terminator for a null-terminated string. 
+		A single null byte is not sufficient for this code, because many Unicode characters contain null bytes 
+		as either the high or the low byte. An example is the letter A, for which the character code is 0x0041.
+		*/
+		static const unsigned WTERM = 0x0000;
 
 		/*
 		DBJ: this is a performance hit, but delivers transformation to wide string

@@ -35,6 +35,7 @@ limitations under the License.
 #include <cstdio>
 #include <string>
 #include <iostream>
+#include <strstream>
 #include <clocale>
 #include <locale>
 #include <codecvt>
@@ -129,6 +130,42 @@ namespace dbj {
 	template<typename R> DBJINLINE void selection_sort(R & range_)
 	{
 		selection_sort(std::begin(range_), std::end(range_));
+	}
+    /* 
+	quick and dirty "any" range to wstring 
+	with no delimiters between elements
+	*/
+	template<typename R>
+	DBJINLINE std::wstring range_to_string(const R & range_) {
+		std::wstring ws(std::begin(range_), std::end(range_));
+		return ws;
+	}
+
+	template<typename T> struct Rez
+	{
+	private:
+		std::wstringstream ss;
+		wchar_t delim;
+	public:
+		Rez(const wchar_t & d) : delim(d), ss() { }
+		void operator( )(const T & e) { ss << e << delim ; }
+		/* cut-off the last delimiter and return the result string */
+		std::wstring str() const {
+			std::wstring str = ss.str(); 
+			str.resize( str.size() - 1);
+			return str;
+		}
+	};
+	/*
+	"any" range to wstring,	with user defined  delimiter between elements
+	default delim is ":"
+	*/
+	template<typename R>
+	DBJINLINE std::wstring range_to_string(const R & range_, const wchar_t delim ) {
+
+		typedef Rez< R::value_type > Result;
+		Result retval = std::for_each(std::begin(range_), std::end(range_), Result(delim));
+		return retval.str() ;
 	}
 	/*
 	*/
@@ -290,7 +327,7 @@ namespace dbj {
 	typedef void(*voidvoidfun) ();
 	template< voidvoidfun ATSTART, voidvoidfun ATEND>
 	struct __declspec(novtable)
-		COUNTER
+		GLOBAL_BEGIN_END
 	{
 		unsigned int & counter()
 		{
@@ -298,25 +335,28 @@ namespace dbj {
 		return counter_;
 		}
 
-		COUNTER() {
+		GLOBAL_BEGIN_END() {
 			const UINT & ctr = (counter())++;
 			if (0 == ctr) {
-				// make something once and upon construction
+				// do something once and upon construction
 				ATSTART()(); 
 			}
 		}
-		~COUNTER() {
+		~GLOBAL_BEGIN_END() {
 			const UINT & ctr = --(counter());
 			if (0 == ctr) {
-				// before destruciton do something once
+				// before destruction do something once
 				ATEND()();
 			}
 		}
 	};
-	/*  
+	/* 
+	Following creates unique type as long as it is not repeated
+	somewehere elase in the same app
+	-------------------------------------------------------------
 	void f1 () { printf("Start once!"); } ;
 	void f2 () { printf("End   once!"); } ;
-	static COUNTER<f1,f2> the_counter__;
+	static GLOBAL_BEGIN_END<f1,f2> the_counter__;
 	*/
 #pragma endregion single counter
 
@@ -330,7 +370,7 @@ namespace dbj {
 	}
 
 	DBJINLINE auto chr2str(const char & c_) {
-		static char str[1] = {};
+		static char str[2] = {0x00, 0x00};
 		str[0] = c_;
 		return str;
 	};
@@ -342,6 +382,11 @@ namespace dbj {
 Not FILE * but HANDLE based output.
 It also uses Windows.1252 Code Page.
 This two are perhaps why this almost always works.
+
+https://msdn.microsoft.com/en-us/library/windows/desktop/dd374122(v=vs.85).aspx
+
+Even if you get your program to write UTF16 correctly to the console, 
+Note that the Windows console isn't UTF16 friendly and may just show garbage.
 */
 struct __declspec(novtable)	WideOut
 	{
@@ -372,13 +417,28 @@ struct __declspec(novtable)	WideOut
 		}
 
 		void operator () (const wchar_t * const wp_) {
-			DBJ_VERIFY( 0 != ::WriteConsoleW(this->output_handle_, wp_, len2dword(wp_), NULL, NULL));
+// last 2 args: no of chars, to in write (DWORD) and in-out written (LPDWORD)
+#if _DEBUG
+			DWORD to_write = len2dword(wp_);
+			DWORD written;
+			WriteConsoleW(this->output_handle_, wp_, to_write, &written, NULL);
+
+			DBJ_VERIFY(to_write == written);
+#else
+			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, wp_, len2dword(wp_), NULL, NULL));
+#endif
 		}
 
 		void operator () (const std::wstring & wp_) {
-			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, wp_.data(), 
-				(DWORD)wp_.size(), 
-				NULL, NULL));
+#if _DEBUG
+			DWORD to_write = len2dword(wp_.data());
+			DWORD written;
+			WriteConsoleW(this->output_handle_, wp_.data(), to_write, &written, NULL);
+
+			DBJ_VERIFY(to_write == written);
+#else
+			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, wp_.data(), len2dword(wp_), NULL, NULL));
+#endif		
 		}
 
 		void operator () (const wchar_t & wp_) {
@@ -428,109 +488,7 @@ struct __declspec(novtable)	WideOut
 
 };
 
-namespace test {
-	
-	using std::wstring;
-	using std::wcout;
 
-	DBJINLINE void the_std_way() {
-
-		static const wchar_t* str = L"爆ぜろリアル！弾けろシナプス！パニッシュメントディス、ワールド！";
-		std::string original_locale(std::setlocale(LC_ALL, NULL), 255);
-		std::string user_locale(std::setlocale(LC_ALL, ""), 255);
-
-		wcout << "\nUpon entering this test, locale was found to be: " << original_locale.data();
-		wcout << "\nLocale will be now set to what the user of this machine has desired: " << user_locale.data();
-		wcout.flush();
-		wcout.imbue(std::locale());
-		wcout << "\nThe length of [" << str << "] is " << std::wcslen(str);
-		wcout << "\nIf output is [], then the new locale is not enough to display the desired string \n";
-		wcout << "\nOk, let's try once more with the original locale" << std::setlocale(LC_ALL, original_locale.data());
-		wcout.flush();
-		wcout.imbue(std::locale(original_locale));
-		wcout << "\nThe length of [" << str << "] is " << std::wcslen(str);
-	}
-	/*
-	This crashes the app with no way to catch the exception
-	ucrtbased.dll is the problem in this case
-	*/
-	DBJINLINE void test_crash_console_output() {
-
-		try {
-
-			fflush(stdout);
-			_setmode(_fileno(stdout), _O_U16TEXT);
-		wprintf(L"OK!");
-		// printf("%S", L"SURE CRASH!");
-
-		}
-		catch (...) {
-
-			fflush(stdout);
-			_setmode(_fileno(stdout), _O_TEXT);
-		wprintf(L"NEVER REACHED :( ucrtbased.dll stops the show...");
-
-		}
-	}
-
-	DBJINLINE void test_wide_output() {
-		WideOut helper_;
-		/*
-		if locale is  English_United Kingdom.1252 both strings bellow outpout as "|-+"
-		*/
-		const static wstring doubles = L"║═╚";
-		const static wstring singles = L"│─└";
-		static const wchar_t wendl{ L'\n' };
-
-		wcout << L"\nDoubles: " << doubles;
-		wcout << L"\nSingles: " << singles;
-	}
-
-	DBJINLINE void writeAnsiChars(HANDLE outhand_, char * ansi__ = 0)
-	{
-		::SetConsoleOutputCP(1252);
-
-		char *ansi_pound = "\nANSI: \xA3\r\n"; //A3 == pound character in Windows-1252
-		ansi_pound = ansi__ ? ansi__ : ansi_pound;
-		WriteConsoleA(outhand_, ansi_pound, len2dword(ansi_pound), NULL, NULL);
-	}
-
-	DBJINLINE void writeUnicodeChars(HANDLE outhand_, const wchar_t * widestr__ = 0)
-	{
-		if (widestr__) {
-			WriteConsoleW(outhand_, widestr__, len2dword(widestr__), NULL, NULL);
-			return;
-		}
-		wchar_t *arr[] =
-		{
-			L"\nUnicode:",
-			L"\u00A3", //00A3 == pound character in UTF-16
-			L"\u044F", //044F == Cyrillic Ya in UTF-16
-			L"\n",   //CRLF
-			0
-		};
-
-		for (int i = 0; arr[i] != 0; i++)
-		{
-			WriteConsoleW(outhand_, arr[i], len2dword(arr[i]), NULL, NULL);
-		}
-	}
-	/*
-	http://illegalargumentexception.blogspot.com/2009/04/i18n-unicode-at-windows-command-prompt.html#charsets_unicodeconsole
-	*/
-	DBJINLINE void basic_test()
-	{
-		const static wstring doubles = L"\nUnicode: ║═╚";
-		const static wstring singles = L"\nUnicode: │─└";
-		auto oh_ = ::GetStdHandle(STD_OUTPUT_HANDLE);
-		DBJ_VERIFY(INVALID_HANDLE_VALUE != oh_);
-
-		writeAnsiChars(oh_);
-		writeUnicodeChars(oh_);
-		writeUnicodeChars(oh_, doubles.data());
-		writeUnicodeChars(oh_, singles.data());
-	}
-} // test
 } // console
 #if DBJCOM		
 		namespace com {
