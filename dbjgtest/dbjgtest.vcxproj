@@ -166,9 +166,6 @@
     <ClInclude Include="internal\gtest-tuple.h" />
     <ClInclude Include="internal\gtest-type-util.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="gtest-param-test.h.pump" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

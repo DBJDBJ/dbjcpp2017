@@ -142,9 +142,6 @@
     <ProjectReference Include="..\dbjgtest\dbjgtest.vcxproj">
       <Project>{7a46b719-fe17-4de6-8a3e-7704e81e8fa2}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\UnitTest++\dbjunittest++.vcxproj">
-      <Project>{588fb7af-5082-4bcc-8559-9ed62f17d2f5}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

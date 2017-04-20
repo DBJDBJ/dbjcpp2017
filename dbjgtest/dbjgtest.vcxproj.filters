@@ -117,7 +117,4 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="gtest-param-test.h.pump" />
-  </ItemGroup>
 </Project>

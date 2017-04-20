@@ -1,7 +1,4 @@
 ========================================================================
-    STATIC LIBRARY : dbjgtest Project Overview
+# CONSOLE APPLICATION : WideConsoleSolution Project Overview
 ========================================================================
-
-This is WIN32 LIB manual recreation of Google Test solution and source
-
-2017 APR 16  dbj@dbj.org
+## Yet another attempt to tame WIN10 Console + UNICODE output
