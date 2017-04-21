@@ -575,6 +575,7 @@ printf("C API says, locale setting is now: %s\n", setlocale(LC_ALL, NULL));
 std::wcout << L"\nuse the new global locale for future wide character output";
 std::wcout.imbue(std::locale());
 #endif
-#define DBJVERSION __DATE__ __TIME__
-#pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
+#define DBJVERSION __FILE__ __DATE__ __TIME__
+#pragma message( "Compiling Version: " DBJVERSION)
 #pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION )
+#undef  DBJVERSION
