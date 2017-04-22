@@ -20,7 +20,9 @@ typedef struct std::pair<TEST_FP,bstr_t> PAIR ;
 
 typedef std::list< PAIR > sequence_type ;
 
-extern sequence_type * sequence ;
+DBJINLINE sequence_type * sequence() {
+	static sequence_type * sequence_ = 0 ; return sequence_;
+}
 //---------------------------------------------------------------------------
 inline void caller( PAIR & fp_name_pair_ )
 {
@@ -93,17 +95,17 @@ inline const void run( std::wostream & os , const _bstr_t & test_id = null_test_
 	//  if no test axed for do them all
 	if ( test_id == null_test_id )
 	{
-		std::for_each( sequence->begin(), sequence->end(), caller ) ;
+		std::for_each( sequence()->begin(), sequence()->end(), caller ) ;
 	}
 	else {
 		// can  we find the test axed for ?
 		sequence_type::iterator & location = std::find_if( 
-			sequence->begin(), 
-			sequence->end(), 
+			sequence()->begin(), 
+			sequence()->end(), 
 			comparator(test_id ) 
 		) ;
 
-		if ( location == sequence->end() )
+		if ( location == sequence()->end() )
 			throw L"Test not  found!" ;
 
 		caller( *location ) ;
@@ -119,19 +121,20 @@ struct DBJtest
 {
 	DBJtest( int dummy = 0 )
 	{
-		implementation::sequence = new implementation::sequence_type()  ;
+		auto isp = implementation::sequence();
+		 isp = new implementation::sequence_type()  ;
 	}
 	~DBJtest  ()
 	{
-		delete implementation::sequence ;
+		delete implementation::sequence() ;
 	}
 	const int reg ( implementation::TEST_FP test_function_pointer, const _bstr_t & test_name )
 	{
-		_ASSERT( implementation::sequence ) ;
+		_ASSERT( implementation::sequence() ) ;
 
 		implementation::PAIR pair_ = std::make_pair( test_function_pointer, test_name ) ;
 
-		implementation::sequence->push_back( pair_ ) ;
+		implementation::sequence()->push_back( pair_ ) ;
 
 		return ( 1 == 1 ) ;
 	}
@@ -140,7 +143,7 @@ struct DBJtest
 	// This  run() will runn all the tests as registered
 	const void run ( std::wostream & os = std::wclog )
 	{
-		_ASSERT( implementation::sequence ) ;
+		_ASSERT( implementation::sequence() ) ;
 
 		implementation::run( os ) ;
 	}
@@ -149,7 +152,7 @@ struct DBJtest
 	// This  run() will run only the test requested
 	const void run ( const  _bstr_t & testname, std::wostream & os = std::wclog )
 	{
-		_ASSERT( implementation::sequence ) ;
+		_ASSERT( implementation::sequence() ) ;
 
 		implementation::run( os, testname ) ;
 	}
@@ -157,18 +160,18 @@ struct DBJtest
 	//------------------------------------------------------
 	const ::size_t number_of_registered_tests () const
 	{
-		_ASSERT( implementation::sequence ) ;
+		_ASSERT( implementation::sequence() ) ;
 
-		return implementation::sequence->size() ;
+		return implementation::sequence()->size() ;
 	}
 
 	//------------------------------------------------------
 	const void show_registered_tests (std::wostream & os = std::wclog) const
 	{
-		_ASSERT( implementation::sequence ) ;
+		_ASSERT( implementation::sequence() ) ;
 
-		std::for_each( implementation::sequence->begin(), 
-			implementation::sequence->end(), 
+		std::for_each( implementation::sequence()->begin(), 
+			implementation::sequence()->end(), 
 			implementation::show_test_name(os) ) ;
 	}
 
@@ -206,9 +209,11 @@ inline void dbgout(wchar_t * pszFormat, _variant_t & variant_arg )
 //-----------------------------------------------------------------------
 
 
-extern dbj::test::DBJtest testing_ ;
+static dbj::test::DBJtest testing_ ;
 
 #define DBJTESTREG(x) testing_.reg( x, bstr_t( #x )) ;
+
+
 
 //-----------------------------------------------------------------------
 //EOF

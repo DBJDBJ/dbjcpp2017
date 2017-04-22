@@ -1,18 +1,21 @@
 
 #include "precomp.h"
-#pragma comment( lib, "kernel32.lib" )
+// #pragma comment( lib, "kernel32.lib" )
 //
 //--------------------------------------------------------------------------------
 namespace {
 	// actually not required ...
 	struct  _INITOR_ 
 	{
-		static UINT counter_ ;
+		static UINT & counter() {
+			static UINT counter_;
+			return counter_;
+		}
 
 	_INITOR_ () 
 	{
 		// use and increment
-		if ( counter_ ++ == 0  )
+		if ( counter() ++ == 0  )
 		{
 			// void * vp = ::malloc( sizeof( DBJtest ) ) ;
 			// testing_ = new(vp) DBJtest() ;
@@ -25,20 +28,19 @@ namespace {
 	~_INITOR_ () 
 	{
 		// decrement and use
-		if (  -- counter_ == 0 )
+		if (  -- counter() == 0 )
 		{
 		}
 	}
 	} ;
 
 	static  _INITOR_	__dbjsys_test_initor__ ;
-	UINT _INITOR_::counter_ = 0 ;
 } // namespace
 //--------------------------------------------------------------------------------
 // 
-dbj::test::implementation::sequence_type * dbj::test::implementation::sequence = 0 ;
 // #pragma init_seg( "__DBJSYSTEMS_TESTING_INITIALIZATION__" )
-#pragma warning( disable : 4073 ) 
-#pragma init_seg( lib )
-dbj::test::DBJtest testing_ ;
+// #pragma warning( disable : 4073 ) 
+// #pragma init_seg( lib )
+// static dbj::test::implementation::sequence_type * dbj::test::implementation::sequence = 0;
+// static dbj::test::DBJtest testing_;
 

@@ -82,9 +82,33 @@ namespace dbjsys {
 //	//
 //	---------------------------------------------------------
 //
+//--------------------------------------------------------------------------------
+		DBJINLINE _bstr_t & errstring_(DWORD lastErrorCode)
+		{
+			static _bstr_t result;
+			LPWSTR lpMsgBuf = NULL;
+
+			if (lastErrorCode != 0)
+			{
+
+				_ASSERT(FormatMessage(
+					FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+					NULL,
+					lastErrorCode, // result of GetLastError()
+					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+					(LPWSTR)&lpMsgBuf, 0, NULL)
+				);
+				result = lpMsgBuf;
+				::LocalFree(lpMsgBuf);
+			}
+			else {
+				result = L"Not an Win32 error";
+			}
+			return result;
+		}
 //
 template< typename T > 
-inline
+DBJINLINE
 _bstr_t dbjtypename( T * t_null /* = (T*)0 */ ) 
 {
 	#if defined( _CPPRTTI )
@@ -141,10 +165,38 @@ _bstr_t dbjtypename( T * t_null /* = (T*)0 */ )
 
 			// make 'standard' error message
 	// 
-			static _bstr_t  & makeErrMsg( const _bstr_t & typeName, const _bstr_t & msg, const _bstr_t & file, const long line ) ;
-			// make win32 error message
+			static _bstr_t  & DBJSYSError::makeErrMsg
+			(const _bstr_t & typeName, const _bstr_t & msg, const _bstr_t & file, const long line)
+			{
+				static const wchar_t prompt1[] = L"\nException!From : ";
+				static const wchar_t prompt2[] = L"\nWhat : ";
+				static const wchar_t prompt3[] = L"\nFile : ";
+				static const wchar_t prompt4[] = L"\nLine : ";
+
+				static _bstr_t NEM = L"Not enough memory! " + _bstr_t(__FILE__) + L":" + _bstr_t(_variant_t(__LINE__));
+				static _bstr_t text;
+				try
+				{
+					text = prompt1 + typeName;
+					text += prompt2 + msg;
+					text += prompt3 + file;
+					text += prompt4 + _bstr_t(_variant_t(line));
+				}
+				catch (...)
+				{
+					return NEM;
+				}
+				return text;
+			}			// make win32 error message
 	// 
-			static _bstr_t  & makeErrMsg( const _bstr_t & typeName, DWORD err_code , const _bstr_t & file, const long line ) ;
+			static _bstr_t  & DBJSYSError::makeErrMsg(const _bstr_t & typeName, DWORD err_code, const _bstr_t & file, const long line)
+			{
+				return DBJSYSError::makeErrMsg(
+					typeName,
+					errstring_(err_code),
+					file,
+					line);
+			}
 
 			static void err_msg_box(
 				const _bstr_t & msg_, 
@@ -165,73 +217,9 @@ _bstr_t dbjtypename( T * t_null /* = (T*)0 */ )
 			}
 		} ;
 
-		//-----------------------------------------------------------------------
-		// Implementation 
-		//-----------------------------------------------------------------------
-		//
-		//-----------------------------------------------------------------------
-		// 
-				_bstr_t  & DBJSYSError::makeErrMsg
-					(const _bstr_t & typeName, const _bstr_t & msg, const _bstr_t & file, const long line)
-				{
-					static const wchar_t prompt1[] = L"\nException!From : ";
-					static const wchar_t prompt2[] = L"\nWhat : ";
-					static const wchar_t prompt3[] = L"\nFile : ";
-					static const wchar_t prompt4[] = L"\nLine : ";
 
-					static _bstr_t NEM = L"Not enough memory! " + _bstr_t(__FILE__) + L":" + _bstr_t(_variant_t(__LINE__));
-					static _bstr_t text;
-					try
-					{
-						text = prompt1 + typeName;
-						text += prompt2 + msg;
-						text += prompt3 + file;
-						text += prompt4 + _bstr_t(_variant_t(line)) ;
-					}
-					catch (...)
-					{
-						return NEM;
-					}
-					return text;
-				}
-				//---------------------------------------------------------------------------------------
-				static _bstr_t & errstring_(DWORD lastErrorCode);
-				// make win32 error message
-				_bstr_t  & DBJSYSError::makeErrMsg(const _bstr_t & typeName, DWORD err_code, const _bstr_t & file, const long line)
-				{
-					return DBJSYSError::makeErrMsg(
-						typeName,
-						errstring_(err_code),
-						file,
-						line);
-				}
-				//--------------------------------------------------------------------------------
-				static _bstr_t & errstring_(DWORD lastErrorCode)
-				{
-					static _bstr_t result;
-					LPWSTR lpMsgBuf = NULL;
-
-					if (lastErrorCode != 0)
-					{
-
-						_ASSERT(FormatMessage(
-							FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-							NULL,
-							lastErrorCode, // result of GetLastError()
-							MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-							(LPWSTR)&lpMsgBuf, 0, NULL)
-							);
-						result = lpMsgBuf;
-						::LocalFree(lpMsgBuf);
-					}
-					else {
-						result = L"Not an Win32 error";
-					}
-					return result;
-				}
 
 //------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------
 // concrete class to be used as abase of all DBJ exceptions
 // that can be made
 // 
@@ -325,21 +313,21 @@ template<class T> class Win32Error : public Error<T>
 	TODO: as normal template + specializations suite of functions
 	*/
 // transform class _com_error to DBJSYSError ;
-template < class T > inline
+template < class T > DBJINLINE
 void __dbj_throw__ ( const _com_error & e, const _bstr_t & file, const int line , Error<T> * )
 {
         throw Error<T>( dbjsys::fm::getErrMsg( e ),file,line) ;
 }
 //	----------------------------------------------
 // construct desired DBJSYSError inheritor
-template < class T > inline
+template < class T > DBJINLINE
 void __dbj_throw__(const _bstr_t &  msg, const _bstr_t &  file, const int line, Error<T> *)
 {
 	throw Error<T>(msg, file, line);
 }
 //	----------------------------------------------
 template < class T > 
-inline
+DBJINLINE
 void __dbj_throw__(const _bstr_t &  msg, const _bstr_t &  file, const int line, Win32Error<T> *)
 {
 	// effectively rectify the mistakes of ussing Win32Error when Error<> should be enough
@@ -357,7 +345,7 @@ void __dbj_throw__ ( const _bstr_t & msg, const char * file, const int line, T *
 /* 
 This in effect transforms std::exception to DBJSYSError
 */
-template < class T > inline
+template < class T > DBJINLINE
 void __dbj_throw__(const std::exception & msg, const char * file, const int line, Error<T> *)
 {
 	throw Error<T>(msg.what(), _bstr_t(file), line);

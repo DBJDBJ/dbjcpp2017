@@ -590,8 +590,10 @@ namespace dbjsys {
 		// ability to do the conversion. Therefore you can not specialize here what 
 		// variant_t can not convert and deliver as a result of one of its extractors.
 		// DBJ 08042001
+		/*
 		DBJFMTXP template DBJFMAPI class cl_argument<long>;
 		DBJFMTXP template DBJFMAPI class cl_argument<bstr_t>;
+		*/
 		// 
 		// CAUTION:
 		// Do NOT do the following :

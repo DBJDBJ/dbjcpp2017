@@ -71,7 +71,7 @@ One macro we do not want as a macro
 #define issign(c) ((c) == '+' ? 1 : ( (c) == '-' ? 1 : 0) ) 
 
 */
-__forceinline bool issign ( const wchar_t & c )
+DBJINLINE bool issign ( const wchar_t & c )
 {
 	if ( c == L'+' ) 
 		return true ;
@@ -136,7 +136,7 @@ public:
 
 //----------------------------------------------------------------------------
 template< typename T >
-__forceinline 
+DBJINLINE
 bool compareNoCase( const T & s1, const T & s2
                           /* , std::equal_to<std::string> & comparator =  NocaseStrEqual() */ 
                           ) 
@@ -146,7 +146,7 @@ bool compareNoCase( const T & s1, const T & s2
 //----------------------------------------------------------------------------
 //
 //
-__forceinline 
+DBJINLINE
 void stringtrim( _bstr_t & _bstr_arg )
 {
 	static const wchar_t SPACE_CHAR = L' ' ;
@@ -180,7 +180,7 @@ TODO
 this is clever but ot necessary
 use _variant_t instead
 */
-__forceinline
+DBJINLINE
  int safeAtoi( const wchar_t * cstr_ , int & result_ )
 {
 	static const int BAD = 0 , GOOD = ! BAD ;
@@ -214,7 +214,7 @@ __forceinline
 //
 // TODO This definitely has to be replaced with cmdline class argv[0]
 //
-__forceinline
+DBJINLINE
  std::wstring this_module_full_path( HMODULE this_module_handle = NULL )
 {
 	wchar_t dllPath_[_MAX_PATH] = L"";
@@ -257,7 +257,7 @@ __forceinline
 #endif
 }
 //----------------------------------------------------------------------------
-__forceinline
+DBJINLINE
  _bstr_t basenameNoExtension( const wchar_t * fullPath_ )
 {
 	_bstr_t result = fullPath_ ; 
@@ -294,7 +294,7 @@ __forceinline
 //
 // clever but should be replaced with  _bstr_t(_variant_t(l))
 //
-__forceinline
+DBJINLINE
 const _bstr_t ltocstr ( const long l )
 {
 	return _bstr_t(_variant_t(l));
@@ -335,7 +335,7 @@ const _bstr_t ltocstr ( const long l )
 //-----------------------------------------------------------------------------
 //-
 //FNC//
-__forceinline const void errBox(const wchar_t * format_, ...)
+DBJINLINE const void errBox(const wchar_t * format_, ...)
 {
 	static const unsigned MSG_BUF_SIZ = BUFSIZ * 4 ;
 
@@ -384,7 +384,7 @@ __forceinline const void errBox(const wchar_t * format_, ...)
 }// end of errBox
 //------------------------------------------------------------------------
 // dependancy on std can be removed here
-__forceinline void display_(const std::exception & e)
+DBJINLINE void display_(const std::exception & e)
 {
   	algo::errBox( L"%s", e.what() ) ;
 }
@@ -401,7 +401,7 @@ time_t		 aclock;
 }
 */
 // UNICODE version
-__forceinline std::wostream & current_time(std::wostream & os)
+DBJINLINE std::wostream & current_time(std::wostream & os)
 {
 struct tm	*newtime = 0 ;
 time_t		 aclock;
@@ -415,7 +415,7 @@ wchar_t      buffer[BUFSIZ];
 //----------------------------------------------------------------------------
 // 010198	DBJ		Changed '.log' to be '.htm'
 //
-__forceinline const wchar_t * makeLogFileName(const wchar_t * fname)
+DBJINLINE const wchar_t * makeLogFileName(const wchar_t * fname)
 {
 	static const    wchar_t    LOGEXTENSION[]       = L".log" ;
 	static          _bstr_t    result_              = L"" ; 
@@ -583,7 +583,7 @@ VerQueryValue(pBlock,
 #endif // DBJ_VERSIONNING
 
 /* of course ... */
-__forceinline _bstr_t d2string_(const double & dn_)
+DBJINLINE _bstr_t d2string_(const double & dn_)
 {
 	_variant_t var = dn_ ;
 	return var ;
@@ -595,12 +595,12 @@ __forceinline _bstr_t d2string_(const double & dn_)
 
 
 template< typename T >
-__forceinline const bool EMPTY_CSTR(const T * const X) { return ((X == NULL) && (X[0] == 0)); }
+DBJINLINE const bool EMPTY_CSTR(const T * const X) { return ((X == NULL) && (X[0] == 0)); }
 
 
 
 //-----------------------------------------------------------------------------
-__forceinline long wstr2long(wchar_t * wstr_) {
+DBJINLINE long wstr2long(wchar_t * wstr_) {
 	long result = 0L;
 	if (!wstr_) return result;
 	try {
@@ -612,7 +612,7 @@ __forceinline long wstr2long(wchar_t * wstr_) {
 /*
 TODO move this to WIN part 
 */
-const wchar_t * envvar(const wchar_t * env_var_name_)
+DBJINLINE const wchar_t * envvar(const wchar_t * env_var_name_)
 {
 	static size_t bufsiz = BUFSIZ;
 	static wchar_t * buffer[BUFSIZ];
@@ -624,7 +624,7 @@ const wchar_t * envvar(const wchar_t * env_var_name_)
 // TODO constants and literals definitely to be moved to a separate single structure
 // which exist and is called dbjsys::glob!
 
-static bool cut_down_to_size(int logfile_handle_)
+DBJINLINE bool cut_down_to_size(int logfile_handle_)
 {
 	bool was_downsized = false;
 	
@@ -672,7 +672,7 @@ static bool cut_down_to_size(int logfile_handle_)
 //
 // 040415   DBJ				Definite legacy function ... serious reqork needed
 //
-void switchErrLog(const _bstr_t & name, const int appendLog)
+DBJINLINE void switchErrLog(const _bstr_t & name, const int appendLog)
 {
 	_bstr_t  fullpath = algo::makeLogFileName(name.length() > 1 ? name : glob::DFLT_LOG_FILE() );
 
