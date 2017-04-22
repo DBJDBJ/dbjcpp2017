@@ -113,15 +113,12 @@
     <ClCompile Include="xcpt_testing.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\fm\fm.h" />
     <ClInclude Include="adotools.h" />
     <ClInclude Include="dbjtest.h" />
     <ClInclude Include="lockedcontainer.h" />
     <ClInclude Include="precomp.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="test_declarations.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="strings.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

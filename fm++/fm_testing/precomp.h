@@ -1,6 +1,5 @@
 
 #pragma once
-
 // switch on the tests required latter
 #define Hash_algo_testing
 #define tokenizers_testing
@@ -12,9 +11,4 @@
 //-----------------------------------------------
 // include the FM++
 #include "../fm/fm.h"
-// include the actual instances of streams
-#include "../fm/dbjio.h"
-
-#include "resource.h"
-
 #include "dbjtest.h"

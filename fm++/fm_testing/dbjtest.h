@@ -6,8 +6,8 @@
 //
 #define TESTAPI extern "C"
 
-// this is inside DBJ*FM++ (dbjfm.lib)
-extern "C" void switchErrLog ( const wchar_t * name , const int appendLog ) ;
+// this was inside DBJ*FM++ (dbjfm.lib)
+// extern "C" void switchErrLog ( const wchar_t * name , const int appendLog ) ;
 //
 namespace dbj {
 //-----------------------------------------------------------------------
@@ -25,13 +25,13 @@ extern sequence_type * sequence ;
 inline void caller( PAIR & fp_name_pair_ )
 {
 	using namespace dbjsys::fm::bstrex;
-
-    static const dbjsys::fm::wstringr underscore(IDS_UNDERSCORE) ;
-    static const dbjsys::fm::wstringr space(IDS_SPACE) ;
-    static const dbjsys::fm::wstringr prompt(IDS_PROMPT) ;
-    static const dbjsys::fm::wstringr begin_msg(IDS_TEST_BEGIN) ;
-    static const dbjsys::fm::wstringr end_msg(IDS_TEST_END) ;
-    static const dbjsys::fm::wstringr err_msg(IDS_ERR_MSG_1) ;
+	
+	static const wchar_t underscore[]	= { L"_"} ;
+    static const wchar_t space []		= { L" "} ;
+    static const wchar_t prompt []		= { L"PROMPT"} ;
+    static const wchar_t begin_msg []	= { L"TEST_BEGIN"} ;
+    static const wchar_t end_msg []		= { L"TEST_END"} ;
+    static const wchar_t err_msg []		= { L"ERROR"} ;
 
 	TEST_FP & test_fun = fp_name_pair_.first ;
 	bstr_t & test_name = fp_name_pair_.second ;

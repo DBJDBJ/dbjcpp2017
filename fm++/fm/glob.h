@@ -23,9 +23,9 @@ namespace dbjsys {
 	namespace glob {
 		//--------------------------------------------------------------------------------
 		// the rock bottom default log file name
-		static const wchar_t * const DFLT_LOG_FILE() { return L"c:/DBJDBJ.log"; }
+		static const wchar_t * const DFLT_LOG_FILE() { return L"//DBJDBJ.log"; }
 		// the rock bottom default log folder name
-		static const wchar_t * const LOG_DIR() { return L"C:"; /* ::_wgetenv( L"WINDIR"); */ }
+		static const wchar_t * const LOG_DIR() { return L"."; /* ::_wgetenv( L"WINDIR"); */ }
 		// the end of string
 		static const wchar_t EOS() { return (wchar_t)0; }
 		static const wchar_t * const  dot() { return L"."; }
@@ -39,8 +39,8 @@ namespace dbjsys {
 		static const volatile long DBJLOGSIZE_MAX = 64 * 1024;
 		// will be used as maximum allowed size for the log file in the method bellow.
 		static const wchar_t * const  FMPP_NAME = L"Fm++";
-		static const wchar_t * const  FMPP_YEAR = L"2015";
-		static const wchar_t * const  FMPP_MJRR = L"1";
+		static const wchar_t * const  FMPP_YEAR = L"2017";
+		static const wchar_t * const  FMPP_MJRR = L"2";
 		static const wchar_t * const  FMPP_MINR = L"0";
 
 		static const _bstr_t  FMPP_TITLE = FMPP_NAME + _bstr_t(FMPP_YEAR) + dot() + FMPP_MJRR + dot() + FMPP_MINR;

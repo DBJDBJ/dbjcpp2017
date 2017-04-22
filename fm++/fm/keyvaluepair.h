@@ -28,7 +28,7 @@ public:
     typedef std::map< _bstr_t, _bstr_t> container_type ;
     typedef container_type::value_type value_type ; // what we store in the container
     typedef container_type::key_type key_type ; // std::string
-    typedef container_type::referent_type referent_type ; // std::string
+    typedef container_type::mapped_type referent_type ; // std::string
     typedef Error<key_value_map> Err ;
     
 	// 

@@ -110,7 +110,7 @@ L"99", (const wchar_t *)0
 	val_[11] = number_[newtime->tm_min][1] ;
 	val_[12] = number_[newtime->tm_sec][0] ;
 	val_[13] = number_[newtime->tm_sec][1] ;
-	val_[14] = L'' ; // a.k.a. 14
+	val_[14] = L'\0' ; // a.k.a. 14
 }
 //*****************************************************************************/
 // User Definable TimeStamp

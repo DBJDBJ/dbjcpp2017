@@ -236,7 +236,7 @@ namespace fm {
 // words "error" or "warning" in your reminders, since it will make
 // the compiler think it should abort execution.  You can double click
 // on these fine messages and jump to the line in question.
-
+#if 0
 //--------------------------------------------------------------------------------
 namespace dbjsys {
 	namespace fm {
@@ -287,9 +287,10 @@ namespace dbjsys {
 //#pragma comment(exestr, "DBJ*FM++ (c) 2010 - 2015 by DBJ.ORG ")
 //#pragma warning( disable : 4073 ) 
 //#pragma init_seg( lib )
-		long __DBJSYS_FM_LIB_INITOR__::counter_ = 0;
+		static long __DBJSYS_FM_LIB_INITOR__::counter_ = 0;
 		//--------------------------------------------------------------------------------
 	}
 }
+#endif
 //--------------------------------------------------------------------------------
 

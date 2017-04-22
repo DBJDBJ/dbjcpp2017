@@ -1,7 +1,11 @@
 
-#include "precomp.h"
-using namespace std; 
-using namespace dbjsys::fm ;
+//-----------------------------------------------
+// include the FM++
+#include "../fm/fm.h"
+#include "dbjtest.h"
+
+//using namespace std;
+//using namespace dbjsys::fm ;
 //
 #define BSTRFILE bstr_t(__FILE__)
 //
@@ -27,7 +31,9 @@ public:
 //-----------------------------------------------------------------------
 extern "C" void exception_testing(  void )
 {
-	prompt ( L"BEGIN exception_testing()") ;
+	using namespace dbjsys::fm;
+
+    	prompt ( L"BEGIN exception_testing()") ;
 	try
 	{
 		The_Class tc;
@@ -59,6 +65,7 @@ extern "C" void exception_testing(  void )
 //-----------------------------------------------------------------------
 extern "C" void test_exception_rethrowing()
 {
+	using namespace dbjsys::fm;
     try {
         try {
             try {
@@ -66,13 +73,13 @@ extern "C" void test_exception_rethrowing()
 		            The_Class tc;
 		            tc.throwErr() ;        
                 }
-                catch( const dbjsys::fm::DBJSYSError e ) { throw ; }
+                catch( const DBJSYSError e ) { throw ; }
             }
-            catch( const dbjsys::fm::DBJSYSError e ) { throw ; }
+            catch( const DBJSYSError e ) { throw ; }
         }
-        catch( const dbjsys::fm::DBJSYSError e ) { throw ; }
+        catch( const DBJSYSError e ) { throw ; }
     }
-    catch( const dbjsys::fm::DBJSYSError e ) { /*throw ;*/ }
+    catch( const DBJSYSError e ) { /*throw ;*/ }
 }
 
 //-----------------------------------------------------------------------

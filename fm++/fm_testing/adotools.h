@@ -59,7 +59,7 @@
 
 //-----------------------------------------------------------------------
 namespace dbj {
-namespace util {
+namespace ado {
 //-----------------------------------------------------------------------
 class ADOconnection // wrapper
 {
@@ -229,7 +229,7 @@ inline void recordset_to_logfile( _variant_t  & rs_in_a_variant , std::wostream 
    
 }
 //-----------------------------------------------------------------------
-} // namespace util 
+} // namespace ado 
 } // namespace dbj 
 //-----------------------------------------------------------------------
 #endif // FMPP_ADO_SERVICES

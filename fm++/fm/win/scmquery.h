@@ -1,5 +1,4 @@
-#ifndef SCMQUERY_H_
-#define SCMQUERY_H_ 1
+#pragma once
 
 namespace dbjsys
 {
@@ -10,10 +9,10 @@ namespace dbjsys
         {
         public:
             typedef Error< SCMQuery > Err;
-            typedef enum STATUS
+            typedef enum 
             {
                 NotInstalled, Stopped, Running
-            };
+            } STATUS;
 
 	// 
             SCMQuery( const std::wstring & machineName = L"" ) ;
@@ -156,4 +155,4 @@ namespace dbjsys
 }; // namespace dbjsys
 
 
-#endif // SCMQUERY_H_
+

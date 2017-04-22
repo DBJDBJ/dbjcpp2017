@@ -71,7 +71,7 @@ namespace dbjsys {
 /****************************************************************************************************************
 deliberately left this in so that it can be compared to _bstr_t version
 */
-#if (!1)
+#if 1
 template< class STRING >
 class loadablestring_base : public STRING
 {

@@ -40,7 +40,7 @@ namespace dbjsys {
 		}
 
 // 
-		struct EqualGUID : public std::binary_function<GUID, GUID, bool> 
+		struct EqualGUID // : public std::binary_function<GUID, GUID, bool> 
 		{
 	// 
 			bool operator()(const GUID & x, const GUID & y) const
@@ -50,7 +50,7 @@ namespace dbjsys {
 		} ;
 
 // 
-		struct LessGUID : public std::less<GUID>
+		struct LessGUID // : public std::less<GUID>
 		{
 	// 
 			bool operator()(const GUID & rguid1, const GUID & rguid2) const

@@ -14,12 +14,16 @@
 //  $Date: 7/06/01 17:58 $
 //  $Revision: 6 $
 //*****************************************************************************/
-#include "precomp.h"
+//-----------------------------------------------
+// include the FM++
+#include "../fm/fm.h"
+#include "dbjtest.h"
+#if FMPP_ADO_SERVICES
+#include "resource.h"
 #include "adotools.h"
-#include <objbase.h>
-#include <assert.h>
+#endif
 //---------------------------------------------------------------------------------
-using namespace dbjsys::fm ;
+// using namespace dbjsys::fm ;
 //---------------------------------------------------------------------------------
 //
 struct com_start 
@@ -46,6 +50,9 @@ struct com_start
 //
 extern "C" void filestream_test()
 {
+#if FMPP_ADO_SERVICES
+
+
 	com_start::instance() ;
 
 	_bstr_t filename = L"test.msock" ;
@@ -59,7 +66,7 @@ extern "C" void filestream_test()
 	const wchar_t * sql_statement = L"SELECT * FROM orders WHERE customerid LIKE 'A%'" ;
 	const wchar_t * mdb_filepath_ = L"x:/nwind.mdb" ;
 
-	variant_t ado_rset = dbj::util::get_record_set(sql_statement, mdb_filepath_ ) ;
+	variant_t ado_rset = dbj::ado::get_record_set(sql_statement, mdb_filepath_ ) ;
 
 	// save the recordset to a file
 	writer.write( ado_rset ) ;
@@ -71,9 +78,10 @@ extern "C" void filestream_test()
 	FileStream::Reader reader( filename ) ;
 	ado_rset = reader.read() ;
 
-	dbj::util::recordset_to_logfile( ado_rset, std::wclog ) ;
+	dbj::ado::recordset_to_logfile( ado_rset, std::wclog ) ;
 
 	// save recordset to another file
 	writer2.write( ado_rset ) ;
+#endif // FMPP_ADO_SERVICES
 }
 

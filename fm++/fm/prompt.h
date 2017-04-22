@@ -20,74 +20,27 @@
 // Complete change, if interested in previous version look into the VSS DB
 //14NOV20000 DBJ
 #pragma once
-
-#if ! defined( _TEST_UTILITIES_H_ )
-#define _TEST_UTILITIES_H_ 1
+#ifndef DBJINLINE
+#define DBJINLINE static __forceinline
+#endif // !DBJINLINE
+/*
+IDS_STRING1             "TESTING DBJSYSTEMS FM"
+IDS_TEST_BEGIN          "Executing Test "
+IDS_TEST_END            "Finished Test "
+IDS_PROMPT              ":"
+IDS_UNDERSCORE          "_"
+IDS_SPACE               " "
+IDS_ERR_MSG_1           "Unknown Exception Caught"
+*/
 //---------------------------------------------------------------------------------------
 namespace dbjsys {
 	namespace fm {
-//---------------------------------------------------------------------------------------
-//
-	//
-    std::wostream & prompt_stream () ;
-    // switch to arbitrary std::wostream
-    void set_prompt_stream ( std::wostream & new_stream );
-    // switch back to default
-    void reset_prompt_stream () ;
-    // switch back to default
-    unsigned int prompth_length ( unsigned int change_to = 0 ) ;
-
-
-//-----------------------------------------------------------------------------
-//
-std::wostream & prompt ( const wchar_t *  p , /* prompt message */
-				  const wchar_t * promptChar = 0 , /* use it if not 0 */
-				  const wchar_t * fillChar = 0 /* use it if not 0 */
-				  ) ;
-/*
-inline std::wostream & prompt ( const std::wstring &  p , // prompt message 
-				  const wchar_t * promptChar = 0 , // use it if not 0 
-				  const wchar_t * fillChar = 0 // use it if not 0 
-				  )
-{
-	return prompt( p.c_str(), promptChar, fillChar ) ;
-}
-*/
-//---------------------------------------------------------------------------------------
-// repeat given char , N times into the given ostream
-std::wostream & prompt ( const wchar_t * c_ , 
-				  const unsigned int N_ 
-				  ) ;
-//--------------------------------------------------------------------------------
-// this template and instantiations bellow can be used as functors
-// when outputing values to prompt()
-template< class T> 
-inline 
-void val2prompt( const T & arg )  
-{
-	prompt(arg) ;
-}
-
-inline void val2prompt ( const wchar_t* arg  ) 
-{
-	prompt( _bstr_t(arg)) ;
-}
-// instantiations (in prompt.cpp) are usable straight-away, eg:
-// std::foreach( a,b, val2prompt<bstr_t> ) ;
-//---------------------------------------------------------------------------------------
-	} ; // fm
-}; // dbjsys
-/***********************************************************************************************
-Bellow is the implementation moved from cpp
-************************************************************************************************/
-namespace dbjsys {
-	namespace fm{
-
+		//---------------------------------------------------------------------------------------
 		namespace  prompt_imp
 		{
-			typedef dbjsys::fm::SREF<CriticalSection> CRIT_REF;
+			typedef SREF<CriticalSection> CRIT_REF;
 
-			__forceinline CRIT_REF critical_section()
+			DBJINLINE CRIT_REF critical_section()
 			{
 				static CRIT_REF cs_;
 				if (cs_.isNull())
@@ -95,7 +48,7 @@ namespace dbjsys {
 				return cs_;
 			}
 
-			__forceinline  std::wostream & the_stream()
+			DBJINLINE  std::wostream & the_stream()
 			{
 				static std::wostream & the_stream_ = std::wcout;
 				return the_stream_;
@@ -105,7 +58,7 @@ namespace dbjsys {
 		//----------------------------------------------------------------------------------------------
 		//                static std::wostream & the_stream_ = std::wcout ;
 		//--------------------------------------------------------------------------------------------
-		std::wostream & dbjsys::fm::prompt_stream()
+		DBJINLINE std::wostream & prompt_stream()
 		{
 			AutoLocker auto_lock(*prompt_imp::critical_section());
 			// default is 'wcout'
@@ -113,7 +66,7 @@ namespace dbjsys {
 		}
 		//----------------------------------------------------------------------------------------------
 		// switch to arbitrary std::wostream. But how?
-		void dbjsys::fm::set_prompt_stream(std::wostream & new_stream)
+		DBJINLINE void set_prompt_stream(std::wostream & new_stream)
 		{
 			AutoLocker auto_lock(*prompt_imp::critical_section());
 			std::wostream & wos = prompt_imp::the_stream();
@@ -122,30 +75,29 @@ namespace dbjsys {
 #endif
 		}
 		//----------------------------------------------------------------------------------------------
-		void dbjsys::fm::reset_prompt_stream()
+		DBJINLINE void reset_prompt_stream()
 		{
 			AutoLocker auto_lock(*prompt_imp::critical_section());
 #if PIGS_ARE_FLYING
 			prompt_imp::the_stream() = std::wcout;
 #endif
 		}
-		// switch back to default
 		//----------------------------------------------------------------------------------------------
-		unsigned int dbjsys::fm::prompth_length(unsigned int change_to)
+		DBJINLINE unsigned int prompth_length(unsigned int change_to = 0)
 		{
 			AutoLocker auto_lock(*prompt_imp::critical_section());
 			static unsigned int current_length = 0; // default
 
-			if (0 < change_to)
+			if ( change_to > 0)
 				current_length = change_to;
 			return current_length;
 		}
-
 		//----------------------------------------------------------------------------------------------
-		std::wostream & dbjsys::fm::prompt(const wchar_t *  p, /* prompt message */
-			const wchar_t * promptChar, /* use it if not 0 */
-			const wchar_t * fillChar  /* use it if not 0 */
-			)
+		DBJINLINE std::wostream & prompt(
+			const wchar_t *  p, /* prompt message */
+			const wchar_t * promptChar = 0,
+			const wchar_t * fillChar = 0
+		)
 		{
 			AutoLocker auto_lock(*prompt_imp::critical_section());
 			const int PROMPT_LENGTH = prompth_length();
@@ -163,7 +115,7 @@ namespace dbjsys {
 		}
 
 		//---------------------------------------------------------------------------------------------------------
-		std::wostream & dbjsys::fm::prompt(const wchar_t * c_, const unsigned int N_)
+		DBJINLINE std::wostream & prompt(const wchar_t * c_, const unsigned int N_)
 		{
 			AutoLocker auto_lock(*prompt_imp::critical_section());
 #ifdef _DEBUG
@@ -179,35 +131,33 @@ namespace dbjsys {
 				<< std::setw(0)
 				<< std::setfill(L' ');
 		}
-
-		//--------------------------------------------------------------------------------
 		//--------------------------------------------------------------------------------
 		// this template and instantiations bellow can be used as functors
-		// when outputing values to prompt
-		//
-		template<> DBJFMAPI void val2prompt<std::wstring>(const std::wstring & arg)
+		// when outputing values to prompt()
+
+		template< class T>
+		DBJINLINE void val2prompt(const T & arg)
+		{
+			prompt((const wchar_t *)arg);
+		}
+
+		DBJINLINE void val2prompt(const _bstr_t & arg)
+		{
+			prompt((const wchar_t *)arg);
+		}
+
+		DBJINLINE void val2prompt(const wchar_t* arg)
+		{
+			// prompt( (const wchar_t*)_bstr_t(arg)) ;
+			prompt(arg);
+		}
+		DBJINLINE void val2prompt(const std::wstring & arg)
 		{
 			prompt(arg.c_str());
 		}
-		//
-		// instantiations bellow are usable straight-away, eg:
-		// std::foreach( a,b, val2prompt<bstr_t> ) ;
-		// all of this makes code smaler and faster in presence
-		// of template instantiations
-#pragma warning ( disable : 4231 )
-		//
-		DBJFMTXP template DBJFMAPI void val2prompt<bstr_t>(const bstr_t & arg);
-		//
-		// DBJFMTXP template DBJFMAPI void val2prompt<wchar_t*>( const wchar_t* & arg  ) ;
-		//
-		// DBJFMTXP template DBJFMAPI void val2prompt<std::wstring>( const std::wstring & arg  ) ;
-		// VC9 throws Error C3416, above
-		//
-		//--------------------------------------------------------------------------------
-	}
-}
-//--------------------------------------------------------------------------------
 
-//-----------------------------------------------------------------------------
-#endif // _TEST_UTILITIES_H_ 1
+		
+
+	}  // fm
+} // dbjsys
 //-----------------------------------------------------------------------------
