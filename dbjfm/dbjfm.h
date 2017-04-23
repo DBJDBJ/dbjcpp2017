@@ -361,7 +361,7 @@ namespace dbj {
 #pragma endregion single counter
 
 	/* string length size_t to DWORD to pacify the MSVC */
-	DBJINLINE DWORD len2dword (const wchar_t * ws_) {
+	DBJINLINE DWORD len2dword ( const wchar_t * ws_) {
 		return static_cast<DWORD>(std::wcslen(ws_));
 	}
 
