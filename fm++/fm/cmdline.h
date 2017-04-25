@@ -88,9 +88,6 @@ namespace dbjsys { namespace fm  {
 			return first_arg	;
 		}
 
-		// copying not allowed
-		CLI(const CLI &) {}
-		const CLI & operator = (const CLI &) {}
 		// moving not allowed
 		CLI(CLI &&) {}
 		const CLI & operator = (CLI &&) {}
@@ -116,6 +113,16 @@ namespace dbjsys { namespace fm  {
 			return singleton_;
 		}
 
+		// copying allowed
+		CLI(const CLI & right ) : args_vec(right.args_vec) { }
+		const CLI & operator = (const CLI & right ) {
+			if (this != &right) {
+				this->args_vec.clear();
+				this->args_vec = right.args_vec;
+			}
+			return *this;
+		}
+
 		auto operator [] (size_t idx_ )
 		{
 			assert(idx_ < args_vec.size());
@@ -132,23 +139,28 @@ namespace dbjsys { namespace fm  {
 		uses _bstr_t convertor
 		*/
 		template<typename T>
-		const T & operator () (const char * cl_symbol, const T & default_value ) const
+		T operator () (const char * cl_symbol, const T & default_value ) const
 		{
-				auto pos = find( bstr(cl_symbol) );
-				if (pos == -1)
-					throw CLI::NotFound(cl_symbol);
 				try {
-					// fm::bstrex::bstr_cast<T>(args_vec[pos].data(), false);
-					dbj::fm::var::variant_cast<T>(args_vec[pos].data(), false);
+					auto vt = (*this)[cl_symbol];
+					return (T)vt;
 				}catch (CLI::NotFound &) {
-					return def_val;
+					return default_value;
+				}
+				catch (...) {
+					// can not be converted to T
+					std::string msg; msg.resize( BUFSIZ, 0x00 );
+					sprintf(&msg[0], "Can not convert return value to type %s, CLI argument is: %s",
+						typeid(default_value).name(), cl_symbol);
+					throw std::runtime_error(msg.data());
 				}
 		}
 
 
 		_variant_t operator [] (const char * cl_symbol) const
 		{
-			auto pos = find(bstr(cl_symbol));
+			auto tag = fm::bstrex::bstr_cast<CLI::string>(cl_symbol, false);
+			auto pos = find(tag);
 			if (pos == -1)
 				throw CLI::NotFound(cl_symbol);
 			return _variant_t(args_vec[pos].data());

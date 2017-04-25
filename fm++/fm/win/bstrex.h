@@ -37,16 +37,16 @@ namespace dbjsys {
 				
 				using parent = _bstr_t;
 
-				explicit bstr() : parent() { }
+				bstr() : parent() { }
 				~bstr() { delete(this); }
 
-				bstr( std::wstring ws) { parent(ws.data());  }
+				bstr( std::wstring ws) : parent(ws.data()) { }
 				const bstr & operator = (const std::wstring & ws) { 
 					this->Assign(parent(ws.data())); return *this; 
 				}
 				operator const std::wstring() const noexcept { return std::wstring((wchar_t *)(*this)); }
 
-				bstr( std::string st) { parent(st.data());  }
+				bstr( std::string st) : parent(st.data()) { }
 				const bstr & operator = (const std::string & st) { 
 					this->Assign(parent(st.data())); return *this;
 				}

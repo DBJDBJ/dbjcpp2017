@@ -73,7 +73,9 @@ int wmain ( int argc, wchar_t ** argv )
 
 	auto cli = dbjsys::fm::CLI::singleton();
 
-	long qm = cli["-?"];
+	auto vt = cli["-?"]; // vt is of variant type after this line
+	// long lv = cli["-?"]; // vt to long happens and throws the exception
+	int  iv = cli("-?", 13); // -? has no value and default 13 is returned
 #if 0
 	dbjsys::fm::cli_argument_string  cl_arg(L"~"); // def.val. is  L"~"
 
