@@ -47,17 +47,19 @@ See documentation on how to use Visual C++ 'Checked Iterators'
 #include <time.h>
 #include <comdef.h>
 
-#if ! defined ( _ASSERTE )
-#include <crtdbg.h>
+#if ! defined ( DBJ_VERIFY )
+#include <assert.h>
+#define DBJ_VERIFY assert
 #endif
-
+/*
+this makes crtdbg.h complain even it is not directly included
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC 
 #endif
-
+*/
 //////////////////////////////////////////////////////////////////////////////////
-#pragma warning ( disable : 4786 )
-#pragma warning ( disable : 4231 )
+// #pragma warning ( disable : 4786 )
+// #pragma warning ( disable : 4231 )
 //////////////////////////////////////////////////////////////////////////////////
 #include <stdexcept>	// includes all the standard exception classes.
 #include <iterator>		// (<iterator.h>)
@@ -91,7 +93,8 @@ See documentation on how to use Visual C++ 'Checked Iterators'
 #ifndef  DBJINLINE
 #define DBJINLINE static __forceinline
 #endif // ! DBJINLINE
-/* 
+
+						/* 
 for ADO utils 
 #define FMPP_ADO_SERVICES
 This requires (in adotools.h)
@@ -103,58 +106,10 @@ so
 
 */
 
-#if defined (STLPORT)
-// VC++ STL std::map uses referent_type
-// STLPORT std::map uses mapped_type
-#define referent_type mapped_type
-#endif
-
-//----------------------------------------------------------------
-// when FM becomes a DLL, DBJFMAPI has tobe changed to dllexport/dllimport
-// DBJFMTXP is made for explicit template instantiations export-ing
-#if defined ( FM_EXPORTING ) 
-	#define DBJFMAPI /* _declspec( dllexport ) */
-	#define DBJFMTXP
-#else
-	#define DBJFMAPI /* _declspec( dllimport ) */
-	#define DBJFMTXP  extern
-#endif
-
 //----------------------------------------------------------------
 #define dbjNOVTABLE __declspec( novtable )
 
-//----------------------------------------------------------------
-// well known typedef's used always and everywhere
-//
-namespace dbjsys {
-namespace fm {
-    //
-    // NOTE: this has to come from DBJ implementation artefact!
-	/*
-	DBJ		06042015	moved to dbjsys::glob
-    inline const int DBJSYS_FM_VER_MAJOR() { return 5; }
-    inline const int DBJSYS_FM_VER_MINOR() { return 0; }
-	*/
-    //
-    //------------------------------------------------------------
-    // Use RTTI in debug builds to verify pointers to abstract types
-    // Use instead of static_cast<>()
-    //
-    // Usage:
-    //   CBar* pBar = checked_cast<CBar *>(pFoo);
-    //
-    // NOTE: this is MicroSoft code
-    //
-    template <class TypeFrom, class TypeTo>
-		__forceinline
-    TypeTo *checked_cast(TypeFrom *p)
-    {
-        ASSERT(dynamic_cast<TypeTo *>(p));
-        return static_cast<TypeTo *>(p);
-    }
 
-} // fm
-} // dbjsys
 //----------------------------------------------------------------
 #include "com/dbjguid.h" // GUID macros, predicates , etc...
 #include "identifiable.h" // provides GUID get_guid()
@@ -201,6 +156,7 @@ namespace fm {
 //----------------------------------------------
 // WIN32 platform extensions
 //
+#include "variant_extensions.h"
 #include "win/bstrex.h"
 #include "win/scmquery.h"
 #include "win/checkversion.h"

@@ -74,7 +74,7 @@ namespace dbjsys {
 				: mutexAttributes_(NULL), initialOwner_(FALSE), name_(n_), mutex_(NULL)
 			{
 				HANDLE rtn = create_mutex_();
-				_ASSERTE(NULL != rtn);
+				DBJ_VERIFY(NULL != rtn);
 			}
 
 			// Dtor calls ReleaseMutex()
@@ -86,7 +86,7 @@ namespace dbjsys {
 					release_mutex_();
 				}
 				catch (...)	{
-					_ASSERTE(!"WARNING: exception caught in ~mutex () ?!");
+					DBJ_VERIFY(!"WARNING: exception caught in ~mutex () ?!");
 				}
 			}
 
@@ -95,7 +95,7 @@ namespace dbjsys {
 			// 
 			void infiniteWait() const
 			{
-				_ASSERTE(NULL != mutex_);
+				DBJ_VERIFY(NULL != mutex_);
 				int waitResult = ::WaitForSingleObject(mutex_, INFINITE);
 
 				// we choose to ignore mutexWaitResult, we will only report 
@@ -107,7 +107,7 @@ namespace dbjsys {
 			// 
 			DWORD exactWait(DWORD milliSeconds_) const
 			{
-				_ASSERTE(NULL != mutex_);
+				DBJ_VERIFY(NULL != mutex_);
 				int waitResult = ::WaitForSingleObject(mutex_, milliSeconds_);
 				// we will report on eventual error
 				if (WAIT_OBJECT_0 != waitResult)
@@ -185,7 +185,7 @@ namespace dbjsys {
 			DWORD		    mutexWaitResult = monimutex.exactWait(ONE_SECOND) ;
 			if( WAIT_TIMEOUT == mutexWaitResult )
 			return 1;
-			_ASSERTE( WAIT_OBJECT_0 == mutexWaitResult );
+			DBJ_VERIFY( WAIT_OBJECT_0 == mutexWaitResult );
 			return 0;
 			}
 			*/

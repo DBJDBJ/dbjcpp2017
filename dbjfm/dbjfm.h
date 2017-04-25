@@ -437,7 +437,7 @@ struct __declspec(novtable)	WideOut
 
 			DBJ_VERIFY(to_write == written);
 #else
-			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, wp_.data(), len2dword(wp_), NULL, NULL));
+			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, wp_.data(), len2dword(wp_.data()), NULL, NULL));
 #endif		
 		}
 

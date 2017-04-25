@@ -1,5 +1,6 @@
 
 #pragma once
+#if 0
 // switch on the tests required latter
 #define Hash_algo_testing
 #define tokenizers_testing
@@ -8,6 +9,7 @@
 #define wrapper_testing 1
 #define __test_CmdLineArguments__
 #define loadablestring_testing
+#endif
 //-----------------------------------------------
 // include the FM++
 #include "../fm/fm.h"

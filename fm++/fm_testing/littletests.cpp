@@ -140,8 +140,30 @@ extern"C"  void hash_test_()
 {
 	hash_test();
 }
+
+#if defined(__test_CmdLineArguments__)
+extern "C" void test_CmdLineArguments()
+{
+
+	using namespace dbjsys::fm;
+
+	cl_argument<long>     cla1(512);
+	cl_argument<long>     cla2(256);
+
+	fun(cla1(L"-n"), cla2(L"-s"));
+
+	// in case command line was  
+	// '-n 1024 -s 512' fun() above will receive 1024 and 512
+	// '-n1024 -s512'   fun() above will receive 1024 and 512
+	// '-n1024'         fun() above will receive 1024 and 256
+	// empty            fun() above will receive  512 and 256
+
+}
+static const int dummy0 = DBJTESTREG(test_CmdLineArguments);
+#endif
+
 //-----------------------------------------------------------------------
-// 
+// Register the test[s]
 //-----------------------------------------------------------------------
 static const int   dummy1 = DBJTESTREG( test1 ) ;
 static const int   dummy2 = DBJTESTREG( test2 ) ;

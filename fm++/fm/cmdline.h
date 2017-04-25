@@ -14,189 +14,7 @@
 //*****************************************************************************/
 #pragma once
 #include "fm.h"
-//--------------------------------------------------------------------------------------
-namespace dbjsys {
-namespace fm {
-
-	namespace { // hide the following typedef  do not make it "library wide"
-#if defined( _UNICODE )
-		typedef wchar_t char_type;
-		typedef _bstr_t string_type;
-#else
-//		#warning DBJ*FM++ __FILE__ has to be compiled as UNICODE 
-		typedef wchar_t char_type;
-		typedef _bstr_t string_type;
-#endif
-	}
-
-
-
-//--------------------------------------------------------------------------------------
-//
-// oo wrap up of the command line. ASCII version; uses __argv and __argc.
-// _UNICODE version uses __wargv and __argc.
-// NOTE:    this works regardless of the VS project type: 
-//          console, windows, even DLL app.
-//
-// Created		DBJ     03122000
-// Improved		DBJ     26122005
-//
-//--------------------------------------------------------------------------------------
-/*
-    the concept is to make a single command line argument encapsulation 
-	whose value is also of an exact static type (not just a string)
-	so that in one go user get's the vale from the cli that is also of a required type
-
-	since CLI conceptualy proced only "words" and "numbers" there are two helper typedefs 
-
-	dbjsys::fm::cli_argument_string;    // for words
-	dbjsys::fm::cli_argument_long  ;    // for numbers
-
- Use as this:
-
-	in this example we are expecting cli to have two tags with long values both
-	with tags "-n" and "-s", so that cli is for example:
-
-	whatever.exe -age 128 -s 2.0
-
-    fun ( long, long ) ; // to be processed by this function internally
-
-	// def.val must be given as a single ctor argument
-	cli_argument_long     age( 12 ) ; 
-    cli_argument_long     str_len( 256 ) ;        
-
-	// now the usage is as simple as this
-    fun ( age("-age"), str_len("-s") ) ; 
-
- Usage semantics variant 2: 
-
-	      We do not give tag as a ctor argument so that we have greater flexibility
-	      to re-use cl_argument<> instance for 2 or more tags but of the same type.
-		  Example of this usage logic:
-
-		  cli_argument_long  long_arg(13);
-
-		  auto age = long_arg(L"-age") ;     // get the -age cli argument of type int
-		  auto sln = long_arg(L"-str_len") ; // get the -str_len cli argument of the type int
-
-		  The slight drawback is that 13 is the def.val. for both -age and -length
-
-  Usage semantics variant 3:
-
-         If this is all too confusing one can use a method provided to enforce yet another 
-		 usage semantics
-
-		 auto age = cli_argument<long>(L"-age",0);
-
-NOTES: 
-
-intantiation of cl_argument<> is not expensive because it shares a singleton
-implementation in the back.
-
-Said implementation is also thread resilient.
-
-*/
-template<typename T> class cl_argument
-{
-	// 
-    T defval_ ; // default value
-    T reqval_ ; // requested value
-	// no default c-tor allowed
-	cl_argument () {} 
-    public:
-		// type of the cli value for the cli tag given
-		typedef T Type ;
-		// type of the string abstraction used
-		typedef string_type String_type;
-	// copy constructor must receive a default value for the cli arguments
-		explicit
-		cl_argument( const T & defval ) : defval_(defval), reqval_(defval)
-    {
-    }
-
-		const string_type operator [] (const unsigned int  & index) const;
-
-	// return true if given symbol exists on the cmd line
-    const bool exists ( const wchar_t  * const cl_symbol ) ;
-
-    // resolve the actual value, and its type, by some cmd.line symbol 
-    const T & operator () ( const wchar_t  * const cl_symbol ) ;
-
-	// was the cmd line query made or/and was the last query OK ?
-	const bool defval () { return defval_ == reqval_ ; } 
-} ;
-//----------------------------------------------------------------------------------------------
-// common CLI arg types are just these two
-
-typedef dbjsys::fm::cl_argument<string_type>   cli_argument_string;
-typedef dbjsys::fm::cl_argument<long>          cli_argument_long  ;
-
-//----------------------------------------------------------------------------------------------
-// use this as an universal cli method that enforces slightly different semantics from above
-/*
-template<class T> 
-inline const T cli_argument_val(const wchar_t  * const cl_tag, const T def_val )
-{
-	cl_argument<T> cliarg_(def_val);
-	return cliarg_(cl_tag);
-}
-*/
-// for string_type 
-inline const string_type cli_argument_(const wchar_t  * const cl_tag, const string_type & def_val)
-{
-	cli_argument_string cliarg_(def_val);
-	return cliarg_(cl_tag);
-}
-// for long
-inline const long cli_argument_(const wchar_t  * const cl_tag, const long & def_val)
-{
-	cli_argument_long cliarg_(def_val);
-	return cliarg_(cl_tag);
-}
-// just a "normal" indexed access to the CLI
-inline const string_type cli_argument_(unsigned int idx_)
-{
-	cli_argument_string cliarg_(L"");
-	return cliarg_[idx_];
-}
-
-//--------------------------------------------------------------------------------------
-#if defined ( __test_CmdLineArguments__ )
-// usage example
-inline long saberi( long a, long b) 
-{
-    return a + b ;
-}
-inline const void test_CmdLineArguments()
-{
-    cl_argument<long>     no_of_elements( 512 ) ;
-    cl_argument<long>     str_len( 256 ) ;
-	// kukulele is made to prove that we do not need 
-	// wchar_t forced instantiation since it is very nicely
-	// substituted by _bstr_t instance of cl_argument<T>
-	// 
-	// so instead of this
-	// cl_argument<wchar_t *> kukulele(L"uh") ;
-	// declare this
-	cl_argument<bstr_t> kukulele(L"uh") ;
-
-
-	wchar_t * clarg = kukulele(L"-name") ;
-    long r = saberi( no_of_elements(L"-n"), str_len(L"-s") ) ;
-
-    // if cl was '-n 1024 -s 512' fun() above will receive 1024 and 512
-    // if cl was '-n1024 -s512'   fun() above will receive 1024 and 512
-    // if cl was '-n1024'         fun() above will receive 1024 and 256
-    // if cl was ''               fun() above will receive  512 and 256
-}
-#endif
-//--------------------------------------------------------------------------------------
-} // namespace fm 
-} // namespace dbj 
-//--------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------
-namespace dbjsys { namespace fm  {
-//--------------------------------------------------------------------------------------
+#if 0
 /*
 std::vector based implementation
 
@@ -204,7 +22,7 @@ If you just want to process command line options yourself, the easiest way is to
 
 vector<string> args(argv + 1, argv + argc);
 
-at the top of your main(). This copies all command-line arguments into a vector of std::strings. Then you can use == to compare strings easily, 
+at the top of your main(). This copies all command-line arguments into a vector of std::strings. Then you can use == to compare strings easily,
 instead of endless strcmp() calls. For example:
 
 int main(int argc, char **argv) {
@@ -226,144 +44,145 @@ outfname = *++i;
 }
 }
 */
+#endif
+//--------------------------------------------------------------------------------------
+namespace dbjsys { namespace fm  {
+//--------------------------------------------------------------------------------------
+	/* Command Line Interface */
 	class CLI {
 	public:
+		using bstr = dbjsys::fm::bstrex::bstr;
+#ifdef _UNICODE
+		using string = std::wstring;
+#else
+		using string = std::string;
+#endif
+		typedef std::vector<string> CLIVector;
+		typedef CLIVector::iterator Iterator_type;
+		using value_type = CLIVector::value_type ;
 
-		typedef std::vector<std::wstring> Cli_type;
-		typedef Cli_type::iterator Iterator_type;
-		typedef Cli_type::iterator::value_type Value_type;
-		typedef Value_type char_type;
-		//
-		class Error { public: const wchar_t * name() { return L"dbj::fm::CLI::Error"; } };
-		class NotFound : public Error { 
-			NotFound() {}
+		class NotFound : protected std::runtime_error {
+			NotFound();
 		public:
-			std::wstring msg_;
-			NotFound(const std::wstring & m_) : msg_(m_) {}
-			const std::wstring what() { return std::wstring(name()) + L" not found " + msg_ ; } 
+			// notorious std::exception suite dos work only with narrow strings
+			NotFound(const std::string & m_) : runtime_error(m_) {
+			}
+			const char * what() const noexcept {
+				auto msg = std::string("dbj::fm::CLI::Error") + " not found: " + this->runtime_error::what();
+				return msg.c_str();
+			}
 		};
-		//
-		CLI()
-			: args_( __wargv, __wargv + __argc)
-		{
-			_ASSERTE( args_.size() );
-		}
-
-		/*
-		main extractor : gets by tag and casts into the type desired
+	private:
+		CLIVector args_vec;
+	public:
+		// argument 0 from the command line
+		const value_type & exe_name() const noexcept {
+			static value_type executable = args_vec[0]; return executable;
+		} 
+		/* 
+		pointer to argument 1 from the command line
+		returns const iterator
 		*/
-		template<typename T>
-		T val (const char_type  &  cl_symbol)
-		{
-			try {
-				Cli_type::iterator result_ = this->find(cl_symbol);
-
-				if (result_ == args_.end())
-					throw new CLI::NotFound(cl_symbol);
-
-				_variant_t vart( (*result_).c_str()) ;
-
-				if (VT_EMPTY != ((VARIANT)vart).vt)
-				{
-					return T(vart);
-				}
-			}
-			catch (const ::_com_error & cerr_) {
-				assert(cerr_.ErrorMessage()); /* conversion failed */
-			}
-					return T(); // empty value
+		auto args_begin() const noexcept {
+			static auto first_arg = std::next( std::begin( args_vec)) ;
+			return first_arg	;
 		}
 
-		char_type val(const char_type  &  cl_symbol) {
-
-			Cli_type::iterator result_ = this->find(cl_symbol);
-
-			if (result_ == args_.end())
-				throw new CLI::NotFound(cl_symbol);
-
-			return *result_;
-		}
-
-		// extract the module name inside which we are running
-		const char_type & val (unsigned int idx_ ) const { return args_[idx_]; }
-
-	private :
-		Cli_type args_;
-		// not allowed
+		// copying not allowed
 		CLI(const CLI &) {}
 		const CLI & operator = (const CLI &) {}
+		// moving not allowed
+		CLI(CLI &&) {}
+		const CLI & operator = (CLI &&) {}
+	protected :
+		CLI()
+//			: args_vec( __wargv, __wargv + __argc)
+//			: args_vec( __argv, __argv + __argc)
+		{
+#ifdef _DEBUG
+#ifdef _UNICODE
+			assert(__wargv);
+			assert(__argc);
+#else
+			assert(__argv);
+			assert(__argc);
+#endif
+#endif
+			args_vec = std::vector<string>(__wargv, __wargv + __argc);
+		}
+	public:
+		static CLI & singleton() {
+			static CLI singleton_;
+			return singleton_;
+		}
 
-		Cli_type::iterator find(const char_type  & tag_) {
-			// skip the first arg as that is a called module name
-			// usually exe in which we are ... 
-			Cli_type::iterator flag_ = std::find(++args_.begin(), args_.end(), tag_);
-			/*
-			flag is found now reach for the value
-			*/
-			return flag_ == args_.end() ? flag_ : ++flag_ ;
+		auto operator [] (size_t idx_ )
+		{
+			assert(idx_ < args_vec.size());
+			return args_vec[idx_];
 		}
-	};
-	//----------------------------------------------------------------------------------------------
-	// use this as an universal cli method 
-	/**/
-	template<class T>
-	inline const T clargument(const wchar_t  * const cl_tag, const T & def_val)
-	{
-		CLI cliarg_ ;
-			try {
-				return cliarg_.val<T>(cl_tag);
-			}
-			catch (CLI::NotFound &){
-				return def_val;
+
+		// return -1 if not found or index to the element found in the vector of arguments
+		auto find(const CLI::string  & tag_) const {
+			auto iter = std::find(args_begin(), args_vec.end(), tag_);
+			return (iter == args_vec.end() ? -1 : std::distance(args_begin(), iter));
 		}
-	}
-	/**/
-	// for string_type 
-	inline const CLI::Value_type clargument(const wchar_t  * const cl_tag, const CLI::Value_type & def_val)
+		/*
+		main extractor : gets by tag and casts the return value into the type desired
+		uses _bstr_t convertor
+		*/
+		template<typename T>
+		const T & operator () (const char * cl_symbol, const T & default_value ) const
+		{
+				auto pos = find( bstr(cl_symbol) );
+				if (pos == -1)
+					throw CLI::NotFound(cl_symbol);
+				try {
+					// fm::bstrex::bstr_cast<T>(args_vec[pos].data(), false);
+					dbj::fm::var::variant_cast<T>(args_vec[pos].data(), false);
+				}catch (CLI::NotFound &) {
+					return def_val;
+				}
+		}
+
+
+		_variant_t operator [] (const char * cl_symbol) const
+		{
+			auto pos = find(bstr(cl_symbol));
+			if (pos == -1)
+				throw CLI::NotFound(cl_symbol);
+			return _variant_t(args_vec[pos].data());
+		}
+
+	}; // eof CLI 
+#if 0
+	// use this as an universal cli argument that returns strings or wstrings 
+	DBJINLINE 
+		const CLI::value_type clargument(
+		const char  * cl_tag, 
+		const CLI::value_type & def_val
+	)
 	{
-		CLI cliarg_ ;
 		try {
-			return cliarg_.val(cl_tag);
+#ifdef _DEBUG
+			auto cli = CLI::singleton() ;
+			auto vr = cli[cl_tag];
+			auto rv = (CLI::value_type)_bstr_t(vr);
+			return rv;
+#else
+			return (CLI::value_type)_bstr_t(CLI::singleton()[cl_tag]);
+#endif
 		}
 		catch (CLI::NotFound &){
 			return def_val;
 		}
 	}
-	// for long
-	inline const long clargument(const wchar_t  * const cl_tag, const long & def_val)
-	{
-		CLI cliarg_;
-		try {
-			return cliarg_.val<long>(cl_tag);
-		}
-		catch (CLI::NotFound &){
-			return def_val;
-		}
-	}
-	/*
-	// for bool
-	inline const long clargument(const wchar_t  * const cl_tag, const bool & def_val)
-	{
-		CLI cliarg_;
-		try {
-			return cliarg_.val<bool>(cl_tag);
-		}
-		catch (CLI::NotFound &){
-			return def_val;
-		}
-	}
-	*/
-	// just a "normal" indexed access to the CLI
-	inline const CLI::Value_type clargument(unsigned int idx_ = 0)
-	{
-		CLI cliarg_;
-		return cliarg_.val(idx_);
-	}
-	//--------------------------------------------------------------------------------------
+#endif
+//--------------------------------------------------------------------------------------
 } // namespace fm 
 } // namespace dbj 
+#if 0
 /*
- *--------------------------------------------------------------------------------------
 Implementaion from cpp moved bellow
  */
 namespace dbjsys {
@@ -372,7 +191,7 @@ namespace dbjsys {
 		namespace {
 
 #if defined( _UNICODE )
-			typedef wchar_t char_type;
+			typedef wchar_t value_type;
 #else
 #error DBJ*FM++ __FILE__ has to be compiled as UNICODE 
 #endif
@@ -398,7 +217,7 @@ namespace dbjsys {
 				//--------------------------------------------------------
 				// return true it str begin's with prefix
 				// 
-				static const bool begins_with(const char_type * prefix, const char_type * str)
+				static const bool begins_with(const value_type * prefix, const value_type * str)
 				{
 					bool result_ = true;
 					for (int j = 0; prefix[j] != 0; j++)
@@ -413,7 +232,7 @@ namespace dbjsys {
 				// we can assume that both arguments begin with the prefix string
 				// and that prefix is shorter than str
 				// 
-				static const char_type * right_of(const char_type * prefix, const char_type * str)
+				static const value_type * right_of(const value_type * prefix, const value_type * str)
 				{
 					int j = 0;
 					while ((prefix[j]) && (prefix[j] == str[j])) j++;
@@ -422,7 +241,7 @@ namespace dbjsys {
 
 				//--------------------------------------------------------
 				// 
-				char_type ** the_cli_arguments;
+				value_type ** the_cli_arguments;
 			public:
 				// 
 				int      number_of_arguments;
@@ -431,7 +250,7 @@ namespace dbjsys {
 				CmdLineArguments()
 					: the_cli_arguments(__wargv), number_of_arguments(__argc)
 				{
-					_ASSERTE(the_cli_arguments);
+					DBJ_VERIFY(the_cli_arguments);
 				}
 
 				// 
@@ -441,7 +260,7 @@ namespace dbjsys {
 				}
 
 				// return true if symbol exist on the current command line
-				const bool symbol_exists(const char_type * prefix)
+				const bool symbol_exists(const value_type * prefix)
 				{
 					Lock auto_lock(critical_section__); // lock the whole instance
 
@@ -452,7 +271,7 @@ namespace dbjsys {
 
 					register int j = 0;
 
-					const char_type * candidate_ = NULL;
+					const value_type * candidate_ = NULL;
 
 					while (NULL != (candidate_ = operator [] (j++)))
 					{
@@ -463,7 +282,7 @@ namespace dbjsys {
 					return result_;
 				}
 				// 
-				const char_type * operator [] (const int index) const
+				const value_type * operator [] (const int index) const
 				{
 					Lock auto_lock(critical_section__); // lock the whole instance
 					if (index < 0) return NULL;
@@ -483,11 +302,11 @@ namespace dbjsys {
 				// 
 				//
 				// 
-				const char_type * operator [] (const char_type * prefix) const
+				const value_type * operator [] (const value_type * prefix) const
 				{
 					Lock auto_lock(critical_section__); // lock the whole instance
 
-					const char_type * result_ = (char_type*)0;
+					const value_type * result_ = (value_type*)0;
 
 					if ((!prefix) && (!*prefix))
 						return result_; // anti jokers measure
@@ -509,14 +328,15 @@ namespace dbjsys {
 				//------------------------------------------------------------
 				// return argument found by its name
 				// ret type is variant
-				_variant_t operator () (const char_type * arg_name_) const
+				_variant_t operator () (const value_type * arg_name_) const
 				{
-					const char_type * cl_str = this->operator [] (arg_name_);
+					const value_type * cl_str = this->operator [] (arg_name_);
 					if ((cl_str != 0) && (cl_str[0] != 0))
 						return _variant_t(cl_str);
 					else
 						return _variant_t(); // VT_EMPTY
 				}
+
 				//------------------------------------------------------------
 				// the singleton method delivers one instance for all threads
 				// I think we need no locking here ? DBJ 08042001
@@ -534,74 +354,216 @@ namespace dbjsys {
 
 		//--------------------------------------------------------------------------------------
 
-		template<typename T>
-		const string_type cl_argument<T>::operator [] (const unsigned int & index) const
-		{
-			return string_type(cline_[index]);
-		}
 
-
-		//--------------------------------------------------------------------------------------
-		//
-		//    cl_argument encapsulates single comand line argument. 
-		//--------------------------------------------------------------------------------------
-		template<typename T>
-		const bool cl_argument<T>::exists(const char_type  * const cl_symbol)
-		{
-			return cline_.symbol_exists(cl_symbol);
-		}
-		//--------------------------------------------------------------------------------------
-		//
-		// resolve the actual value and its type by c.l. symbol used 
-		//
-		//--------------------------------------------------------------------------------------
-		template<typename T>
-		const T & cl_argument<T>::operator () (const char_type  * const cl_symbol)
-		{
-			try {
-				_variant_t vart = cline_(cl_symbol);
-
-				if (VT_EMPTY != ((VARIANT)vart).vt)
-				{
-					this->reqval_ = (T)vart;
-				}
-				else {
-					this->reqval_ = this->defval_;
-				}
-			}
-			catch (const ::_com_error & cerr_) {
-				assert(cerr_.ErrorMessage()); /* conversion failed */
-			}
-			return this->reqval_;
-		}
-		//--------------------------------------------------------------------------------------
-		//
-		// in header we have this two typedefs
-		//
-		//	typedef dbjsys::fm::cl_argument<_bstr_t>   cli_argument_string ;
-		//	typedef dbjsys::fm::cl_argument<long>      cli_argument_long;
-		//
-		// explicit instantiations
-		//
-		// Whenever code that uses FM and some cl_argument<T> does not link we have
-		// to add cl_argument<> specialization for T here. This is not so bad because
-		// number of different types T is small in the context of command line arguments. 
-		// NOTE: since implementation of cl_argument uses variant_t, it depends on its
-		// ability to do the conversion. Therefore you can not specialize here what 
-		// variant_t can not convert and deliver as a result of one of its extractors.
-		// DBJ 08042001
-		/*
-		DBJFMTXP template DBJFMAPI class cl_argument<long>;
-		DBJFMTXP template DBJFMAPI class cl_argument<bstr_t>;
-		*/
 		// 
 		// CAUTION:
-		// Do NOT do the following :
-		// DBJFMTXP template DBJFMAPI class cl_argument<wchar_t *> ;
-		// If you do you will require a specialization for the wchar_t, because
-		// cl_argument<wchar_t>::operator () ( .... )
-		// can not be implemented as it is above. But all of this is NOT necessary
-		// since cl_argument<bstr_t>, covers wchar_t uses perfectly well ...
+		// cl_argument<bstr_t>, covers wchar_t uses perfectly well ...
 		//--------------------------------------------------------------------------------------
 	} // namespace fm 
 } // namespace dbj 
+#endif
+
+#if 0
+namespace dbjsys {
+	namespace fm {
+
+		/*
+		--------------------------------------------------------------------------------------
+
+		oo wrap up of the command line. ASCII version; uses __argv and __argc.
+		_UNICODE version uses __wargv and __argc.
+		NOTE:    this works regardless of the VS project type:
+		console, windows, even DLL app.
+
+		Created		DBJ     03122000
+		Improved		DBJ     26122005
+
+		--------------------------------------------------------------------------------------
+		the concept is to make a single command line argument encapsulation
+		whose value is also of an exact static type (not just a string)
+		so that in one go user get's the vale from the cli that is also of a required type
+
+		since CLI conceptualy proced only "words" and "numbers" there are two helper typedefs
+
+		dbjsys::fm::cli_argument_string;    // for words
+		dbjsys::fm::cli_argument_long  ;    // for numbers
+
+		Use as this:
+
+		in this example we are expecting cli to have two tags with long values both
+		with tags "-n" and "-s", so that cli is for example:
+
+		whatever.exe -age 128 -s 2.0
+
+		fun ( long, long ) ; // to be processed by this function internally
+
+		// def.val must be given as a single ctor argument
+		cli_argument_long     age( 12 ) ;
+		cli_argument_long     str_len( 256 ) ;
+
+		// now the usage is as simple as this
+		fun ( age("-age"), str_len("-s") ) ;
+
+		Usage semantics variant 2:
+
+		We do not give tag as a ctor argument so that we have greater flexibility
+		to re-use cl_argument<> instance for 2 or more tags but of the same type.
+		Example of this usage logic:
+
+		cli_argument_long  long_arg(13);
+
+		auto age = long_arg(L"-age") ;     // get the -age cli argument of type int
+		auto sln = long_arg(L"-str_len") ; // get the -str_len cli argument of the type int
+
+		The slight drawback is that 13 is the def.val. for both -age and -length
+
+		Usage semantics variant 3:
+
+		If this is all too confusing one can use a method provided to enforce yet another
+		usage semantics
+
+		auto age = cli_argument<long>(L"-age",0);
+
+		NOTES:
+
+		intantiation of cl_argument<> is not expensive because it shares a singleton
+		implementation in the back.
+
+		Said implementation is also thread resilient.
+
+		*/
+		template<typename T> class cl_argument
+		{
+			// 
+			T defval_; // default value
+			T reqval_; // requested value
+					   // no default c-tor allowed
+			cl_argument() {}
+		public:
+			// hide the following typedef  do not make it "library wide"
+#if defined( _UNICODE )
+			typedef wchar_t value_type;
+			typedef _bstr_t string_type;
+#else
+			//		#warning DBJ*FM++ __FILE__ has to be compiled as UNICODE 
+			typedef wchar_t value_type;
+			typedef _bstr_t string_type;
+#endif
+
+			// type of the cli value for the cli tag given
+			typedef T Type;
+			// type of the string abstraction used
+			typedef string_type String_type;
+			// copy constructor must receive a default value for the cli arguments
+			explicit
+				cl_argument(const T & defval) : defval_(defval), reqval_(defval)
+			{
+			}
+
+			const operator [] (const unsigned int & index) const
+			{
+				return string_type(cline_[index]);
+			}
+			//--------------------------------------------------------------------------------------
+			//
+			//    cl_argument encapsulates single comand line argument. 
+			//--------------------------------------------------------------------------------------
+			const bool exists(const value_type  * const cl_symbol)
+			{
+				return cline_.symbol_exists(cl_symbol);
+			}
+			//--------------------------------------------------------------------------------------
+			//
+			// resolve the actual value and its type by c.l. symbol used 
+			//
+			//--------------------------------------------------------------------------------------
+			const T & operator () (const value_type  * const cl_symbol)
+			{
+				try {
+					_variant_t vart = cline_(cl_symbol);
+
+					if (VT_EMPTY != ((VARIANT)vart).vt)
+					{
+						this->reqval_ = (T)vart;
+					}
+					else {
+						this->reqval_ = this->defval_;
+					}
+				}
+				catch (const ::_com_error & cerr_) {
+					assert(cerr_.ErrorMessage()); /* conversion failed */
+				}
+				return this->reqval_;
+			}
+
+			// was the cmd line query made or/and was the last query OK ?
+			const bool defval() { return defval_ == reqval_; }
+		};
+		//----------------------------------------------------------------------------------------------
+		// common CLI arg types are just these two
+
+		typedef dbjsys::fm::cl_argument<string_type>   cli_argument_string;
+		typedef dbjsys::fm::cl_argument<long>          cli_argument_long;
+
+		//----------------------------------------------------------------------------------------------
+		// use this as an universal cli method that enforces slightly different semantics from above
+		/*
+		template<class T>
+		inline const T cli_argument_val(const wchar_t  * const cl_tag, const T def_val )
+		{
+		cl_argument<T> cliarg_(def_val);
+		return cliarg_(cl_tag);
+		}
+		*/
+		// for string_type 
+		inline const string_type cli_argument_(const wchar_t  * const cl_tag, const string_type & def_val)
+		{
+			cli_argument_string cliarg_(def_val);
+			return cliarg_(cl_tag);
+		}
+		// for long
+		inline const long cli_argument_(const wchar_t  * const cl_tag, const long & def_val)
+		{
+			cli_argument_long cliarg_(def_val);
+			return cliarg_(cl_tag);
+		}
+		// just a "normal" indexed access to the CLI
+		inline const string_type cli_argument_(unsigned int idx_)
+		{
+			cli_argument_string cliarg_(L"");
+			return cliarg_[idx_];
+		}
+		namespace test {
+			//--------------------------------------------------------------------------------------
+			// usage example
+			inline long saberi(long a, long b)
+			{
+				return a + b;
+			}
+			inline const void test_CmdLineArguments()
+			{
+				cl_argument<long>     no_of_elements(512);
+				cl_argument<long>     str_len(256);
+				// kukulele is made to prove that we do not need 
+				// wchar_t forced instantiation since it is very nicely
+				// substituted by _bstr_t instance of cl_argument<T>
+				// 
+				// so instead of this
+				// cl_argument<wchar_t *> kukulele(L"uh") ;
+				// declare this
+				cl_argument<bstr_t> kukulele(L"uh");
+
+
+				wchar_t * clarg = kukulele(L"-name");
+				long r = saberi(no_of_elements(L"-n"), str_len(L"-s"));
+
+				// if cl was '-n 1024 -s 512' fun() above will receive 1024 and 512
+				// if cl was '-n1024 -s512'   fun() above will receive 1024 and 512
+				// if cl was '-n1024'         fun() above will receive 1024 and 256
+				// if cl was ''               fun() above will receive  512 and 256
+			}
+		} // test
+		  //--------------------------------------------------------------------------------------
+	} // namespace fm 
+} // namespace dbj 
+#endif

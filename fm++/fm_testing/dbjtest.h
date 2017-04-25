@@ -21,7 +21,8 @@ typedef struct std::pair<TEST_FP,bstr_t> PAIR ;
 typedef std::list< PAIR > sequence_type ;
 
 DBJINLINE sequence_type * sequence() {
-	static sequence_type * sequence_ = 0 ; return sequence_;
+	static sequence_type sequence_ = {} ;
+	return &sequence_;
 }
 //---------------------------------------------------------------------------
 inline void caller( PAIR & fp_name_pair_ )
@@ -121,17 +122,14 @@ struct DBJtest
 {
 	DBJtest( int dummy = 0 )
 	{
+		// provoke making it
 		auto isp = implementation::sequence();
-		 isp = new implementation::sequence_type()  ;
 	}
 	~DBJtest  ()
 	{
-		delete implementation::sequence() ;
 	}
 	const int reg ( implementation::TEST_FP test_function_pointer, const _bstr_t & test_name )
 	{
-		_ASSERT( implementation::sequence() ) ;
-
 		implementation::PAIR pair_ = std::make_pair( test_function_pointer, test_name ) ;
 
 		implementation::sequence()->push_back( pair_ ) ;
@@ -160,16 +158,12 @@ struct DBJtest
 	//------------------------------------------------------
 	const ::size_t number_of_registered_tests () const
 	{
-		_ASSERT( implementation::sequence() ) ;
-
 		return implementation::sequence()->size() ;
 	}
 
 	//------------------------------------------------------
 	const void show_registered_tests (std::wostream & os = std::wclog) const
 	{
-		_ASSERT( implementation::sequence() ) ;
-
 		std::for_each( implementation::sequence()->begin(), 
 			implementation::sequence()->end(), 
 			implementation::show_test_name(os) ) ;
@@ -180,16 +174,16 @@ struct DBJtest
 // printf-like output to the result logfile
 inline void dbgout(wchar_t * pszFormat, ...) 
 {
-  static const unsigned long BUFLEN =  1024 * 64 ; // plenty...
+  static const unsigned long BUFLEN =  BUFSIZ * 2 ; // 1024 ... plenty...
   static wchar_t szBuff[BUFLEN] = L"" ;
 
-  memset( szBuff, 0, BUFLEN * sizeof( wchar_t ) ) ;
-
+  memset( szBuff, 0, sizeof szBuff ) ;
+  
   va_list arglist;
   va_start(arglist, pszFormat);
  
   int rtn = wvsprintfW(szBuff, pszFormat, arglist) ; 
-  _ASSERTE( rtn < sizeof(szBuff)/sizeof(szBuff[0]) );
+  DBJ_VERIFY( rtn < sizeof(szBuff)/sizeof(szBuff[0]) );
 
   dbjsys::fm::prompt( szBuff ) ;
   
@@ -200,7 +194,7 @@ inline void dbgout(wchar_t * pszFormat, _variant_t & variant_arg )
 {
 	_bstr_t bstr((_bstr_t)variant_arg ) ;
 	wchar_t * wstr = (wchar_t *)bstr ;
-	_ASSERTE( wstr) ;
+	DBJ_VERIFY( wstr) ;
 	dbgout( pszFormat, wstr ) ;
 }
 //-----------------------------------------------------------------------

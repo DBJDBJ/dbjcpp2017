@@ -129,7 +129,7 @@ public:
 
         if( psa )
         {
-            _ASSERTE(SafeArrayGetDim(const_cast<SAFEARRAY*>(psa)) == 1);
+            DBJ_VERIFY(SafeArrayGetDim(const_cast<SAFEARRAY*>(psa)) == 1);
             HR(SafeArrayCopy(const_cast<SAFEARRAY*>(psa), &m_psa));
         }
 
@@ -189,7 +189,7 @@ public:
     SAFEARRAY** operator&()
     {
         // NOTE: This isn't reasonable, as SAs are passed [in, out] all the time
-        //_ASSERTE(!m_psa);
+        //DBJ_VERIFY(!m_psa);
         return &m_psa;
     }
 
@@ -203,7 +203,7 @@ public:
     long Length(const SAFEARRAY* psa)
     {
         if( !psa ) return 0;
-        _ASSERTE(SafeArrayGetDim(const_cast<SAFEARRAY*>(psa)) == 1);
+        DBJ_VERIFY(SafeArrayGetDim(const_cast<SAFEARRAY*>(psa)) == 1);
 
         long    ub; SafeArrayGetUBound(const_cast<SAFEARRAY*>(psa), 1, &ub);
         long    lb; SafeArrayGetLBound(const_cast<SAFEARRAY*>(psa), 1, &lb);
@@ -301,10 +301,10 @@ public:
     {
 #ifdef _DEBUG
         VARTYPE vt = VarType((T*)0);
-        _ASSERTE(((vt & VT_BYREF) == 0) && "Can't create a SA using VT_BYREF");
-        _ASSERTE(((vt & VT_ARRAY) == 0) && "Can't create a SA using VT_ARRAY");
-        _ASSERTE(((vt & VT_TYPEMASK) != VT_EMPTY) && "Can't create a SA using VT_EMPTY");
-        _ASSERTE(((vt & VT_TYPEMASK) != VT_NULL) && "Can't create a SA using VT_NULL");
+        DBJ_VERIFY(((vt & VT_BYREF) == 0) && "Can't create a SA using VT_BYREF");
+        DBJ_VERIFY(((vt & VT_ARRAY) == 0) && "Can't create a SA using VT_ARRAY");
+        DBJ_VERIFY(((vt & VT_TYPEMASK) != VT_EMPTY) && "Can't create a SA using VT_EMPTY");
+        DBJ_VERIFY(((vt & VT_TYPEMASK) != VT_NULL) && "Can't create a SA using VT_NULL");
 #endif
 
         SAFEARRAYBOUND  sab = { celt, nLowerBound };
@@ -324,7 +324,7 @@ public:
 
     T* RawData()
     {
-        _ASSERTE(m_psa);
+        DBJ_VERIFY(m_psa);
         return reinterpret_cast<T*>(m_psa->pvData);
     }
 
@@ -439,7 +439,7 @@ public:
 #ifdef _DEBUG
         if( n < 0 || n >= m_celt )
         {
-            _ASSERTE(false && "Accessing data out of bounds");
+            DBJ_VERIFY(false && "Accessing data out of bounds");
         }
 #endif
         return reinterpret_cast<T*>(m_pv)[n];

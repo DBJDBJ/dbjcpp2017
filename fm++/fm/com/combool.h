@@ -45,10 +45,10 @@ extern HRESULT IEvenChecker::IsEven([in] long n, [out, retval] VARIANT_BOOL* pvb
 HRESULT IsEven(IEvenChecker* pec, VARIANT_BOOL* pvb)
 {
     CComBool    b;  // Supports ctors for all bool types
-    _ASSERTE(!b);   // Starts as false, supports operator! and operator bool
+    DBJ_VERIFY(!b);   // Starts as false, supports operator! and operator bool
 
     pec->IsEven(2, &b); // Supports operator&
-    _ASSERTE(b == VARIANT_TRUE);    // Supports operator== and operator !=
+    DBJ_VERIFY(b == VARIANT_TRUE);    // Supports operator== and operator !=
 
     b = false;  // Support operator =
     _ASERERT(b);
@@ -169,7 +169,7 @@ public:
 
     static
 	// 
-    void Assert(VARIANT_BOOL vb) { _ASSERTE((vb == VARIANT_TRUE) || (vb == VARIANT_FALSE)); }
+    void Assert(VARIANT_BOOL vb) { DBJ_VERIFY((vb == VARIANT_TRUE) || (vb == VARIANT_FALSE)); }
 
 private:
 	// 

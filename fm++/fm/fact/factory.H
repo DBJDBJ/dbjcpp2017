@@ -202,7 +202,7 @@ public :
         inline factory_unit< factory<BaseType>, NewType> & add_unit( NewType * t_ )
         {
             // first of all there is no point to have *t_
-            _ASSERTE( 0 == t_ ) ;
+            DBJ_VERIFY( 0 == t_ ) ;
             // to understand what is happening here look into the 
             // factory_unit constructor
             return factory_unit< factory<BaseType>, NewType >::instance() ;
@@ -307,7 +307,7 @@ template< class F, class T >
 inline factory_unit<F,T> & add_unit_to_factory( const F & factory_,  T * t_ )
 {
     // first of all there is no point to have *t_
-    _ASSERTE( 0 == t_ ) ;
+    DBJ_VERIFY( 0 == t_ ) ;
     // to understand what is happening here look into the 
     // factory_unit constructor
     return factory_unit<F,T>::instance() ;

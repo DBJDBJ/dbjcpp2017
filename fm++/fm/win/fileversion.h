@@ -38,7 +38,7 @@ namespace dbjsys {
 			va_start(arglist, pszFormat);
 			wchar_t szBuff[1024];
 			int rtn = wvsprintfW(szBuff, pszFormat, arglist);
-			_ASSERTE(rtn < sizeof(szBuff) / sizeof(szBuff[0]));
+			DBJ_VERIFY(rtn < sizeof(szBuff) / sizeof(szBuff[0]));
 			// OutputDebugStringW(szBuff);
 			target = szBuff;
 			va_end(arglist);

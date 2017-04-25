@@ -71,10 +71,10 @@ int wmain ( int argc, wchar_t ** argv )
 {
 	TODO;
 
-	dbjsys::fm::CLI  cli2;
+	auto cli = dbjsys::fm::CLI::singleton();
 
-	long qm = cli2.val<long>(L"-?");
-	
+	long qm = cli["-?"];
+#if 0
 	dbjsys::fm::cli_argument_string  cl_arg(L"~"); // def.val. is  L"~"
 
 	dbjsys::fm::cli_argument_string::Type testname_; // extract arg. val. by symbol '-t'
@@ -119,6 +119,7 @@ int wmain ( int argc, wchar_t ** argv )
 		dbj::test::dbgout(L"%s ERROR --  %s", argv[0], x )  ;
 		return 2 ;
 	}
+#endif
 		return 0 ;
 }
 // EOF

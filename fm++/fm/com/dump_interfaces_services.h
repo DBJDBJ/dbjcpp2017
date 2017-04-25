@@ -24,8 +24,8 @@ namespace dbjsys {
 // http://www.geocities.com/~andien/atlaux.htm
 // Version: 1.01
 //------------------------------------------------------------------
-#if ! defined ( _ASSERTE )
-#include <crtdbg.h>
+#if ! defined ( DBJ_VERIFY )
+// #include <crtdbg.h>
 #endif
 //------------------------------------------------------------------
 inline void _dbgout(wchar_t * pszFormat, ...) {
@@ -33,7 +33,7 @@ inline void _dbgout(wchar_t * pszFormat, ...) {
   va_start(arglist, pszFormat);
   wchar_t szBuff[1024];
   int rtn = wvsprintfW(szBuff, pszFormat, arglist) ; 
-  _ASSERTE( rtn < sizeof(szBuff)/sizeof(szBuff[0]) );
+  DBJ_VERIFY( rtn < sizeof(szBuff)/sizeof(szBuff[0]) );
   OutputDebugStringW(szBuff);
   va_end(arglist);
 }

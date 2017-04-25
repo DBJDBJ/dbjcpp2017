@@ -407,8 +407,8 @@ struct tm	*newtime = 0 ;
 time_t		 aclock;
 wchar_t      buffer[BUFSIZ];
    time( &aclock );                 /* Get time in seconds */
-   _ASSERTE( localtime_s( newtime, &aclock ));  /* Convert time to struct tm form */
-   _ASSERTE(_wasctime_s(buffer,BUFSIZ, newtime));
+   DBJ_VERIFY( localtime_s( newtime, &aclock ));  /* Convert time to struct tm form */
+   DBJ_VERIFY(_wasctime_s(buffer,BUFSIZ, newtime));
    return os << buffer;/* Print local time as a w-string */
 }
 

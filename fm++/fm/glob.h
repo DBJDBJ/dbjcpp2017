@@ -49,4 +49,26 @@ namespace dbjsys {
 
 		//--------------------------------------------------------------------------------
 	} //    namespace glob
+
+	namespace fm {
+
+		// Use RTTI in debug builds to verify pointers to abstract types
+		// Use instead of static_cast<>()
+		//
+		// Usage:
+		//   CBar* pBar = checked_cast<CBar *>(pFoo);
+		//
+		// NOTE: this is MicroSoft code
+		//
+		template <class TypeFrom, class TypeTo>
+		DBJINLINE
+			TypeTo *checked_cast(TypeFrom *p)
+		{
+			assert(dynamic_cast<TypeTo *>(p));
+			return static_cast<TypeTo *>(p);
+		}
+
+	} // fm
 } // namespace dbjsys 
+
+  

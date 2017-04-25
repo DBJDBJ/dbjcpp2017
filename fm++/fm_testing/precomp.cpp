@@ -41,6 +41,5 @@ namespace {
 // #pragma init_seg( "__DBJSYSTEMS_TESTING_INITIALIZATION__" )
 // #pragma warning( disable : 4073 ) 
 // #pragma init_seg( lib )
-// static dbj::test::implementation::sequence_type * dbj::test::implementation::sequence = 0;
 // static dbj::test::DBJtest testing_;
 
