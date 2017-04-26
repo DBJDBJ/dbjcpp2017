@@ -39,7 +39,7 @@ extern "C" void exception_testing(  void )
 		The_Class tc;
 		tc.throwErr() ;
 	}
-	catch( const dbjsys::fm::DBJSYSError & e )
+	catch( const dbjsys::fm::IError & e )
 	{
 		prompt (e.what()) ;
 	}
@@ -73,13 +73,13 @@ extern "C" void test_exception_rethrowing()
 		            The_Class tc;
 		            tc.throwErr() ;        
                 }
-                catch( const DBJSYSError e ) { throw ; }
+                catch( const IError e ) { throw ; }
             }
-            catch( const DBJSYSError e ) { throw ; }
+            catch( const IError e ) { throw ; }
         }
-        catch( const DBJSYSError e ) { throw ; }
+        catch( const IError e ) { throw ; }
     }
-    catch( const DBJSYSError e ) { /*throw ;*/ }
+    catch( const IError e ) { /*throw ;*/ }
 }
 
 //-----------------------------------------------------------------------

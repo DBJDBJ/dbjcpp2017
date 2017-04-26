@@ -29,61 +29,8 @@ C++ exception specification ignored except to indicate a function is not __decls
 // ----------------------------------------------------------------------
 namespace dbjsys {
 	namespace fm {
-//	---------------------------------------------------------
-//	We want more info when we catch the exception
-//	We want to know at least the class of the object
-//	WHO has thrown the exception, besides the actual
-//	message saying WHAT has happened. And because we
-//	are pro-active we will want to know from WHERE this
-//	exception is thrown.
-//	This is the concept of what we want, and this is
-//	the class built around that concept.
-//
-//	---------------------------------------------------------
-//
-//	The usage example :
-//
-//	class A {
-//	public :
-//		typedef Error<A> Err ; // this is all we have to do
-//
-//		A () {
-//			// throw Err("A::A() failed") ; // re-active usage
-//			throw Err("A::A() failed", __FILE__, __LINE__) ; //
-//	pro-active usage
-//		}
-//	} ;
-//
-//	int main ( int argc , TCHAR ** argv )
-//	{
-//		try {
-//			A aha ;
-//		}
-//		catch ( A::Err & x ) // when A is visible, we can use
-//	it
-//	    {	                 // to access it's interface
-//			x.display() ;
-//		}
-//		catch ( exception & x ) // or like this when A is not
-//	visible
-//		{                       // but still with extended info
-//			cerr << endl << x.what() << endl ;
-//		}
-//			return 0 ;
-//	}
-//
-//	//
-//	// The above test will print out the following :
-//	//
-//	// Exception from    : class A
-//	// In File , On Line :
-//	C:\architect\cpp\errtemplate\errtemplate.h , 81
-//	// Exception message : A::A() failed
-//	//
-//	---------------------------------------------------------
-//
-//--------------------------------------------------------------------------------
-		DBJINLINE _bstr_t & errstring_(DWORD lastErrorCode)
+
+DBJINLINE _bstr_t & errstring_(DWORD lastErrorCode)
 		{
 			static _bstr_t result;
 			LPWSTR lpMsgBuf = NULL;
@@ -102,14 +49,13 @@ namespace dbjsys {
 				::LocalFree(lpMsgBuf);
 			}
 			else {
-				result = L"Not an Win32 error";
+				result = L"Not a Win32 error";
 			}
 			return result;
 		}
 //
 template< typename T > 
-DBJINLINE
-_bstr_t dbjtypename( T * t_null /* = (T*)0 */ ) 
+DBJINLINE _bstr_t dbjtypename( T * t_null /* = (T*)0 */ ) 
 {
 	#if defined( _CPPRTTI )
 		return _bstr_t(typeid(T).name()) ;
@@ -121,43 +67,38 @@ _bstr_t dbjtypename( T * t_null /* = (T*)0 */ )
 #define DBJTYPEID(T) dbjtypename<T>((T*)0)
 //---------------------------------------------------------------------------------------
 //
-// interface to each and every DBJ generated class
+// interface to each and every DBJ generated error fm class
 // 
-		class DBJSYSError
+		class IError
 		{
-	// 
 			const _bstr_t errmsg_ ;
-	// 
 			bool reported_ ;
 			// no default ctor
-	// 
-			DBJSYSError() ;
+			IError() ;
 
 		public:
-	// 
-			DBJSYSError( const _bstr_t & themsg, bool DO_NOT_BEEP_ON_EXIT = false )
+			IError( const _bstr_t & themsg, bool DO_NOT_BEEP_ON_EXIT = false )
 				: errmsg_(themsg), reported_(DO_NOT_BEEP_ON_EXIT)
 			{
 			}		
-	// 
-			virtual ~DBJSYSError()
+			virtual ~IError()
 			{
+				errmsg_.~_bstr_t();
 			}
-			// 
-			const _bstr_t & what () const 
+			const _bstr_t & what () const noexcept
 			{ 
 				return errmsg_ ; 
 			}
-
 			const _bstr_t & report( const bool & pop = false ) const
 			{
 				if (false == reported_)
 				{
-					const_cast<DBJSYSError*>(this)->reported_ = true;
+					const_cast<IError*>(this)->reported_ = true;
 					::Beep(100, 300);
 					/*
-					TODO server side apps must not pop message boxes ...
+					TODO: server side apps must not pop message boxes, but log the messages ...
 					*/
+					if (pop )
 					err_msg_box(errmsg_);
 				}
 				return errmsg_;
@@ -165,13 +106,13 @@ _bstr_t dbjtypename( T * t_null /* = (T*)0 */ )
 
 			// make 'standard' error message
 	// 
-			static _bstr_t  & DBJSYSError::makeErrMsg
+			static _bstr_t  & IError::makeErrMsg
 			(const _bstr_t & typeName, const _bstr_t & msg, const _bstr_t & file, const long line)
 			{
-				static const wchar_t prompt1[] = L"\nException!From : ";
-				static const wchar_t prompt2[] = L"\nWhat : ";
-				static const wchar_t prompt3[] = L"\nFile : ";
-				static const wchar_t prompt4[] = L"\nLine : ";
+				static const wchar_t prompt1[] = L"\nException from : ";
+				static const wchar_t prompt2[] = L"\n\nWhat : ";
+				static const wchar_t prompt3[] = L"\n\nFile : ";
+				static const wchar_t prompt4[] = L"\n\nLine : ";
 
 				static _bstr_t NEM = L"Not enough memory! " + _bstr_t(__FILE__) + L":" + _bstr_t(_variant_t(__LINE__));
 				static _bstr_t text;
@@ -189,9 +130,9 @@ _bstr_t dbjtypename( T * t_null /* = (T*)0 */ )
 				return text;
 			}			// make win32 error message
 	// 
-			static _bstr_t  & DBJSYSError::makeErrMsg(const _bstr_t & typeName, DWORD err_code, const _bstr_t & file, const long line)
+			static _bstr_t  & IError::makeErrMsg(const _bstr_t & typeName, DWORD err_code, const _bstr_t & file, const long line)
 			{
-				return DBJSYSError::makeErrMsg(
+				return IError::makeErrMsg(
 					typeName,
 					errstring_(err_code),
 					file,
@@ -216,17 +157,14 @@ _bstr_t dbjtypename( T * t_null /* = (T*)0 */ )
 					ExitProcess(GetLastError());
 			}
 		} ;
-
-
-
 //------------------------------------------------------------------------------------
 // concrete class to be used as abase of all DBJ exceptions
 // that can be made
 // 
-template <class T> class Error : protected DBJSYSError  
+template <class T> class Error : public IError  
 {
   
-	typedef  DBJSYSError	parent_type ;
+	typedef  IError	parent_type ;
   public:
         //	The class that has thrown this exception.
     typedef T thrower_type;
@@ -312,14 +250,14 @@ template<class T> class Win32Error : public Error<T>
 
 	TODO: as normal template + specializations suite of functions
 	*/
-// transform class _com_error to DBJSYSError ;
+// transform class _com_error to IError ;
 template < class T > DBJINLINE
 void __dbj_throw__ ( const _com_error & e, const _bstr_t & file, const int line , Error<T> * )
 {
         throw Error<T>( dbjsys::fm::getErrMsg( e ),file,line) ;
 }
 //	----------------------------------------------
-// construct desired DBJSYSError inheritor
+// construct desired IError inheritor
 template < class T > DBJINLINE
 void __dbj_throw__(const _bstr_t &  msg, const _bstr_t &  file, const int line, Error<T> *)
 {
@@ -343,7 +281,7 @@ void __dbj_throw__ ( const _bstr_t & msg, const char * file, const int line, T *
 */
 //	----------------------------------------------
 /* 
-This in effect transforms std::exception to DBJSYSError
+This in effect transforms std::exception to IError
 */
 template < class T > DBJINLINE
 void __dbj_throw__(const std::exception & msg, const char * file, const int line, Error<T> *)
@@ -379,6 +317,9 @@ Always used by dbjVERIFY() macro bellow
 #define dbjMAKE_ERR(x) typedef dbjsys::fm::Error<x> Err
 // 
 #define dbjTHROWERR(m) dbjsys::fm::__dbj_throw__(m,__FILE__,__LINE__, (Err*)0)
+
+#define dbjPOPERR catch ( const dbjsys::fm::IError & dbjfmerr ) { dbjfmerr.report(true); }
+
 //
 // this assertion always works , e.g. in a release mode
 // string argument is always taken as UNICODE (prefixed with  'L')
@@ -394,4 +335,69 @@ following are a bit more generic macros
 //
 #define dbjTHROWIF(x,y) if ( x ) throw y(__FILE__,__LINE__) 
 
-//	----------------------------------------------
+/**
+<summary>
+We want more info when we catch the exception
+We want to know at least the class of the object
+WHO has thrown the exception, besides the actual
+message saying WHAT has happened. And because we
+are pro-active we will want to know from WHERE this
+exception is thrown.
+This is the concept of what we want, and this is
+the class built around that concept.
+</summary>
+
+<example>
+<code>
+class A {
+public :
+typedef Error<A> Err ; // this is all we have to do
+
+A () {
+// throw Err("A::A() failed") ; // re-active usage
+throw Err("A::A() failed", __FILE__, __LINE__) ; //
+pro-active usage
+}
+} ;
+
+int main ( int argc , TCHAR ** argv )
+{
+try {
+A aha ;
+}
+catch ( A::Err & x ) // when A is visible, we can use
+it
+{	                 // to access it's interface
+x.display() ;
+}
+catch ( exception & x ) // or like this when A is not
+visible
+{                       // but still with extended info
+cerr << endl << x.what() << endl ;
+}
+return 0 ;
+}
+</code>
+
+The above test will print out the following :
+
+Exception from    : class A
+In File , On Line :
+C:\architect\cpp\errtemplate\errtemplate.h , 81
+Exception message : A::A() failed
+</example>
+*/
+namespace dbjsys {
+	namespace error {
+		struct DBJ_FM_WIDE {  };
+		/// <summary>
+		/// Create FM wide dbjsys::error::Err
+		/// </summary>
+		typedef dbjsys::fm::Error<DBJ_FM_WIDE> Err;
+		/// <summary>
+		/// Use FM wide dbjsys::error::Err
+		/// </summary>
+#define dbjFMERR(m) dbjsys::fm::__dbj_throw__(m,__FILE__,__LINE__, (dbjsys::error::Err*)0)
+	} 
+}
+

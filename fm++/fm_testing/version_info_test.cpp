@@ -39,7 +39,7 @@ extern "C" void version_info_test()
 			<< L"\nFile Product Version: " <<  fv.GetProductVersion()   ;
 
 	}
-	catch ( const DBJSYSError & x )
+	catch ( const IError & x )
 	{
 		prompt( x.what() ) ;
 	}

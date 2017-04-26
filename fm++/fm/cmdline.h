@@ -18,31 +18,10 @@
 /*
 std::vector based implementation
 
-If you just want to process command line options yourself, the easiest way is to put:
-
 vector<string> args(argv + 1, argv + argc);
 
-at the top of your main(). This copies all command-line arguments into a vector of std::strings. Then you can use == to compare strings easily,
-instead of endless strcmp() calls. For example:
 
-int main(int argc, char **argv) {
-vector<string> args(argv + 1, argv + argc);
-string infname, outfname;
 
-// Loop over command-line args
-// (Actually I usually use an ordinary integer loop variable and compare
-// args[i] instead of *i -- don't tell anyone! ;)
-for (vector<string>::iterator i = args.begin(); i != args.end(); ++i) {
-if (*i == "-h" || *i == "--help") {
-cout << "Syntax: foomatic -i <infile> -o <outfile>" << endl;
-return 0;
-} else if (*i == "-i") {
-infname = *++i;
-} else if (*i == "-o") {
-outfname = *++i;
-}
-}
-}
 */
 #endif
 //--------------------------------------------------------------------------------------
@@ -76,17 +55,15 @@ namespace dbjsys { namespace fm  {
 		CLIVector args_vec;
 	public:
 		// argument 0 from the command line
-		const value_type & exe_name() const noexcept {
-			static value_type executable = args_vec[0]; return executable;
+		const value_type & exe_name() const noexcept 
+		{
+#ifdef _UNICODE
+			static string executable = __wargv[0]; 
+#else
+			static string executable = __argv[0];
+#endif
+			return executable;
 		} 
-		/* 
-		pointer to argument 1 from the command line
-		returns const iterator
-		*/
-		auto args_begin() const noexcept {
-			static auto first_arg = std::next( std::begin( args_vec)) ;
-			return first_arg	;
-		}
 
 		// moving not allowed
 		CLI(CLI &&) {}
@@ -105,7 +82,7 @@ namespace dbjsys { namespace fm  {
 			assert(__argc);
 #endif
 #endif
-			args_vec = std::vector<string>(__wargv, __wargv + __argc);
+			args_vec = std::vector<string>(__wargv + 1, __wargv + __argc);
 		}
 	public:
 		static CLI & singleton() {
@@ -130,10 +107,12 @@ namespace dbjsys { namespace fm  {
 		}
 
 		// return -1 if not found or index to the element found in the vector of arguments
-		auto find(const CLI::string  & tag_) const {
-			auto iter = std::find(args_begin(), args_vec.end(), tag_);
-			return (iter == args_vec.end() ? -1 : std::distance(args_begin(), iter));
+		auto find(const char * const tag_) const {
+			CLI::string tag = fm::bstrex::bstr_cast<CLI::string>(tag_, false);
+				auto iter = std::find(args_vec.begin(), args_vec.end(), tag);
+					return (iter == args_vec.end() ? -1 : std::distance(args_vec.begin(), iter));
 		}
+
 		/*
 		main extractor : gets by tag and casts the return value into the type desired
 		uses _bstr_t convertor
@@ -150,20 +129,55 @@ namespace dbjsys { namespace fm  {
 				catch (...) {
 					// can not be converted to T
 					std::string msg; msg.resize( BUFSIZ, 0x00 );
-					sprintf(&msg[0], "Can not convert return value to type %s, CLI argument is: %s",
+					sprintf(
+						&msg[0], "Can not convert return value to type %s, CLI argument is: %s",
 						typeid(default_value).name(), cl_symbol);
-					throw std::runtime_error(msg.data());
+					dbjFMERR(msg.data());
 				}
 		}
 
 
 		_variant_t operator [] (const char * cl_symbol) const
 		{
-			auto tag = fm::bstrex::bstr_cast<CLI::string>(cl_symbol, false);
-			auto pos = find(tag);
+			auto pos = find(cl_symbol);
 			if (pos == -1)
 				throw CLI::NotFound(cl_symbol);
 			return _variant_t(args_vec[pos].data());
+		}
+
+		const char key_prefix = '-';
+		bool is_key(const string & s_) const noexcept {
+			const char * tag = _bstr_t(s_.data());
+				return tag[0] == key_prefix;
+		}
+
+		using kvpair = std::pair<string, std::vector<string> >;
+		/*
+		return key value pair found by key 
+		value is vector of strings, consider example of a (slightly weird but valid) CL:
+		-? -t 13 -name Abra Ka Dabra -bool TRUE
+		above makes all the kvpairs like these:
+		"-?", {}
+		"-t", { "13" }
+		"-name", { "Abra", "Ka", "Dabra" }
+		"-bool", { "TRUE" }
+		*/
+		 kvpair kv( const string & key) {
+				 auto iter1 = std::find(args_vec.begin(), args_vec.end(), key);
+
+			 if (iter1 == args_vec.end())
+				     throw CLI::NotFound((char *)_bstr_t(key.data()));
+
+			 auto iter2 = ++ iter1;
+
+			 while (iter2 != args_vec.end()) {
+				 ++ iter2 ;
+				 if (is_key(*iter2)) {
+					 break;
+				 } 
+			  }
+			 kvpair::second_type vec(iter1, iter2);
+			 return std::make_pair(key, vec);
 		}
 
 	}; // eof CLI 

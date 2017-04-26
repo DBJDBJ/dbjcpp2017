@@ -125,7 +125,7 @@ public:
         );
 
        //if( 0 == result )
-       //  throw DBJSYSError(dbjsys::fm::doctor::errstring() ) ;
+       //  throw IError(dbjsys::fm::doctor::errstring() ) ;
 	  
 	   dbjVERIFY(result);
 
