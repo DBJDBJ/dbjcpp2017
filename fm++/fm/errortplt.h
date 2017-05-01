@@ -106,7 +106,7 @@ DBJINLINE _bstr_t dbjtypename( T * t_null /* = (T*)0 */ )
 
 			// make 'standard' error message
 	// 
-			static _bstr_t  & IError::makeErrMsg
+			static _bstr_t  & makeErrMsg
 			(const _bstr_t & typeName, const _bstr_t & msg, const _bstr_t & file, const long line)
 			{
 				static const wchar_t prompt1[] = L"\nException from : ";
@@ -130,7 +130,7 @@ DBJINLINE _bstr_t dbjtypename( T * t_null /* = (T*)0 */ )
 				return text;
 			}			// make win32 error message
 	// 
-			static _bstr_t  & IError::makeErrMsg(const _bstr_t & typeName, DWORD err_code, const _bstr_t & file, const long line)
+			static _bstr_t  & makeErrMsg(const _bstr_t & typeName, DWORD err_code, const _bstr_t & file, const long line)
 			{
 				return IError::makeErrMsg(
 					typeName,

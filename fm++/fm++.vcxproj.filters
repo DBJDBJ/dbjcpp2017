@@ -75,9 +75,6 @@
     <ClInclude Include="fm\ptl\PTLSTORE.H">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="fm\win\bstrex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="fm\win\checkversion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -190,6 +187,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="fm\variant_extensions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fm\win\bstr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

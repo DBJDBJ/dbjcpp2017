@@ -28,7 +28,7 @@ namespace dbjsys {
 // #include <crtdbg.h>
 #endif
 //------------------------------------------------------------------
-inline void _dbgout(wchar_t * pszFormat, ...) {
+DBJINLINE  void _dbgout( const wchar_t *  pszFormat, ...) {
   va_list arglist;
   va_start(arglist, pszFormat);
   wchar_t szBuff[1024];
@@ -39,15 +39,15 @@ inline void _dbgout(wchar_t * pszFormat, ...) {
 }
 
 // cannot use _t2ole inside the loop...
-inline OLECHAR* _t2ole(OLECHAR* dst, const wchar_t* src) {
-  OLECHAR* d = dst;
+DBJINLINE  OLECHAR* _t2ole(OLECHAR* dst, const wchar_t* src) {
+  OLECHAR* d = const_cast<OLECHAR *>(dst);
   while ( (*d++ = *src++) );
   return dst;
 }
 
 // dump all registered and supported interfaces
 
-inline const void DumpIfaces(IUnknown* unk) 
+DBJINLINE  const void DumpIfaces(IUnknown* unk) 
 {
   _dbgout(L"-- Interfaces:\n");
   if ( !unk ) return;
@@ -85,7 +85,7 @@ inline const void DumpIfaces(IUnknown* unk)
 EXTERN_C const GUID SID_SContainerDispatch;
 EXTERN_C const GUID SID_STopLevelBrowser;
 
-inline const void DumpServices(IUnknown* unk) {
+DBJINLINE  const void DumpServices(IUnknown* unk) {
   _dbgout(L"-- Services:\n");
   if ( !unk ) return;
   IServiceProvider* sp = NULL;

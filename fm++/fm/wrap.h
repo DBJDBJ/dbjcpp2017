@@ -23,41 +23,29 @@ namespace dbjsys {
 //--------------------------------------------------------------------
 // 
         struct Comparable {
-	// 
             bool operator == ( const long &  ) { return false; }
-	// 
             bool operator != ( const long &  ) { return true ; }
         } ;
 //--------------------------------------------------------------------
 // 
         struct Pref : public Comparable { 
-	// 
 			Pref() {}
-	// 
 			virtual ~Pref() {}
-	// 
             virtual void operator()() const = 0 ;
         };
 //--------------------------------------------------------------------
 // 
         struct Suf : public Comparable { 
-	// 
 			Suf  () {}
-	// 
 			virtual ~Suf() {}
-	// 
             virtual void operator()() const = 0 ;
         };
 //--------------------------------------------------------------------
-// 
         struct NullPref : public Pref { 
-	// 
             virtual void operator()() const {}
         };
 //--------------------------------------------------------------------
-// 
         struct NullSuf : public Suf { 
-	// 
             virtual void operator()() const {}
         };
 //--------------------------------------------------------------------
@@ -73,7 +61,7 @@ class Call_proxy {
 public:
 	explicit Call_proxy(T* pp, Suf su) :p(pp), own(true), suffix(su) 
     { 
-        _ASSERT(p) ;
+        DBJ_VERIFY(p) ;
     }		// restrict creation 
 
 	Call_proxy& operator=(const Call_proxy&);	// prevent assignment
@@ -110,15 +98,13 @@ protected :
 					delete p; p = 0 ;
 				}
 				catch ( ... ) {
-					_ASSERT(0);
+					DBJ_VERIFY(0);
 				}
 			delete owned; owned = 0 ;
 		} 
 	}
 
-	// 
 	Pref prefix;
-	// 
 	Suf suffix;
 
 public:
@@ -128,6 +114,12 @@ public:
     // this is the ONLY allowed type for functions acting as prefixes or suffixes
     typedef void (* ps_function_type) ( ) ;
 
+	//-------------------------------------------------
+	// 
+	constexpr bool valid() const noexcept
+	{
+		return ((this != 0) && (p != 0) && (&prefix != 0) && (&suffix != 0));
+	}
     //////////////////////////////////////////////////////////
     // this works as long as all types involved have default
     // constructor available and are 'constructable'
@@ -187,12 +179,7 @@ public:
 	// 
 	virtual ~Wrap() { decr_owned(); }
 
-    //-------------------------------------------------
-	// 
-    bool valid () const
-    {
-        return ( (this != 0) && (p != 0 ) && ( &prefix != 0 ) && ( &suffix != 0 ) ) ;
-    }
+
 
     //-------------------------------------------------
 	// 
@@ -204,10 +191,11 @@ public:
 
     //-------------------------------------------------
     // DBJ added the const-nes 18MAR2001
+	// DBJ added constexpr and noexcept 01MAY2017
 	// 
-	const T * const direct() const // extract pointer to wrapped object
+	constexpr T * const direct() const noexcept // extract pointer to wrapped object
         { 
-            return p; 
+            return this->p; 
         } 
 
 };
@@ -239,7 +227,7 @@ public:
 			lock_type & operator = ( const lock_type & other ) ;
 			//
 	// 
-            void operator()() const {   _ASSERT(cs_); cs_->enter();  }
+            void operator()() const {   DBJ_VERIFY(cs_); cs_->enter();  }
         };
 	    //-------------------------------------------------
 // 
@@ -254,7 +242,7 @@ public:
 	// 
 			unlock_type & operator = ( const unlock_type & other );
 	// 
-            void operator()() const { _ASSERT(cs_);  cs_->leave();  }
+            void operator()() const { DBJ_VERIFY(cs_);  cs_->leave();  }
         };
 //--------------------------------------------------------------------
 	} //	namespace locking_wrap_implementation 
@@ -276,6 +264,8 @@ template<
 	PREFIX * pp_ ;
 	SUFFIX * sp_ ;
 public :
+	using PARENT = fm::Wrap<T, PREFIX, SUFFIX >;
+
 	explicit WWrap () 
 	: Parent( new T()
 				, *(pp_ = new PREFIX(cs_))
@@ -298,7 +288,7 @@ public :
 
 		} catch (...) 
 		{
-			_ASSERT(0) ;
+			DBJ_VERIFY(0) ;
 		}
 	}
     //-------------------------------------------------
@@ -322,9 +312,10 @@ public :
     template<class P_>
         void for_each( P_ predicate) const
     {
-		_ASSERT( valid() ) ; 
-        AutoWrap ps(prefix, suffix) ;
-        std::for_each( p->begin(), p->end(), predicate ) ; 
+		DBJ_VERIFY( this->valid() ) ; 
+        AutoWrap ps(this->prefix, this->suffix) ;
+		// T * p = this->direct();
+        std::for_each( this->p->begin(), this->p->end(), predicate ) ; 
     }
     //-------------------------------------------------
     // 'Visitor Method' -- the 'Implementation Pattern'?
@@ -336,11 +327,11 @@ public :
     template<class I, class P_>
         const bool find_if( I & iter_ , P_ predicate) const
     {
-		_ASSERT( valid() ) ; 
-        AutoWrap ps(prefix, suffix) ;
-        iter_ = std::find_if( p->begin(), p->end(), predicate ) ; 
+			DBJ_VERIFY(this->valid());
+			AutoWrap ps(this->prefix, this->suffix) ;
+        iter_ = std::find_if(this->p->begin(), this->p->end(), predicate ) ;
 
-        if ( iter_ == p->end() ) 
+        if ( iter_ == this->p->end() )
             return false ;
         else
             return true  ;

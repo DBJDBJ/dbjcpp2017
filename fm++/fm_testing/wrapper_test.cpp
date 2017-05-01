@@ -78,7 +78,7 @@ namespace wrapper_test {
   //----------------------------------------------------------------------
 
 using namespace dbjsys::fm ;
-using namespace dbjsys::fm::bstrex ;
+using namespace dbjsys::fm::bstr ;
 //
 static volatile const bstr_t BSTRFILE (__FILE__) ;
 //--------------------------------------------------------------------------------

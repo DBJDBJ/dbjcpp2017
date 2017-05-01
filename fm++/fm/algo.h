@@ -586,7 +586,7 @@ VerQueryValue(pBlock,
 DBJINLINE _bstr_t d2string_(const double & dn_)
 {
 	_variant_t var = dn_ ;
-	return var ;
+	return (_bstr_t)var ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -615,8 +615,8 @@ TODO move this to WIN part
 DBJINLINE const wchar_t * envvar(const wchar_t * env_var_name_)
 {
 	static size_t bufsiz = BUFSIZ;
-	static wchar_t * buffer[BUFSIZ];
-	*buffer = L"";
+	static wchar_t *buffer[BUFSIZ] = {};
+	std::memset(buffer, 0, BUFSIZ - 1);
 	_ASSERT(_wdupenv_s(buffer, &bufsiz, env_var_name_));
 	return *buffer;
 }

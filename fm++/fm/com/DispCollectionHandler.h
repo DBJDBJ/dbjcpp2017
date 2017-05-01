@@ -132,7 +132,7 @@ public:
                 // S_OK indicates nBatchSize was returned
 		        if ( hr == S_OK )
 		        {
-			        _bstr_t bstrTemp = static_cast<_variant_t>(arrVariant[0]);
+			        _bstr_t bstrTemp = (_bstr_t)static_cast<_variant_t>(arrVariant[0]);
 			        target_stream << static_cast<const wchar_t*>(bstrTemp) << delimiter ;
 			        ::VariantClear(&arrVariant[0]);
 		        }

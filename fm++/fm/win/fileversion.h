@@ -32,7 +32,7 @@ namespace dbjsys {
 	namespace fm {
 //*****************************************************************************/
 		// TODO: to be used also in doctor.h
-		DBJINLINE bstr_t & format(bstr_t & target, wchar_t * pszFormat, ...)
+		DBJINLINE bstr_t & format(bstr_t & target, const wchar_t * pszFormat, ...)
 		{
 			va_list arglist;
 			va_start(arglist, pszFormat);
@@ -165,6 +165,7 @@ public:
 		UINT nQuerySize = 0;
 		LPVOID lpData = 0;
 		bstr_t strValue, strBlockName;
+		
 		format(strBlockName, L"\\StringFileInfo\\%08lx\\%s", dwLangCharset, lpszValueName);
 
 		dbjTHROWIF(

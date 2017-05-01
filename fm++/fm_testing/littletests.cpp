@@ -8,7 +8,7 @@
 #include "precomp.h"
 //------------------------------------------------------------------------
 using namespace dbjsys::fm ;
-using namespace dbjsys::fm::bstrex ;
+using namespace dbjsys::fm::bstr ;
 //------------------------------------------------------------------------
 //strcmp
 struct NocaseStrEqual : public std::equal_to<std::string>
@@ -128,7 +128,7 @@ namespace {
 		std::string tricky_names[] = { "PeraPeri", "ZikaZiki", "MikaMiki", "LazaLazi" };
 		applicator(tricky_names, tricky_names + 4, show1 );
 
-		wchar_t * very_tricky_names[] = { L"Deepak the Proof Rider", L"Mahmudul the Big Equalizer", L"Ryan is gone", L"DBJ the Curator" };
+		const wchar_t * very_tricky_names[] = { L"Deepak the Proof Rider", L"Mahmudul the Big Equalizer", L"Ryan is gone", L"DBJ the Curator" };
 		applicator(very_tricky_names, very_tricky_names + 4, show3);
 
 	}

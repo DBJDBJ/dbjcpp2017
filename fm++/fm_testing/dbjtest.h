@@ -27,7 +27,7 @@ DBJINLINE sequence_type * sequence() {
 //---------------------------------------------------------------------------
 inline void caller( PAIR & fp_name_pair_ )
 {
-	using namespace dbjsys::fm::bstrex;
+	using namespace dbjsys::fm::bstr;
 	
 	static const wchar_t underscore[]	= { L"_"} ;
     static const wchar_t space []		= { L" "} ;
@@ -67,7 +67,7 @@ struct show_test_name  {
 	}
 	void operator () ( PAIR & the_pair ) const	
 	{	
-		using namespace dbjsys::fm::bstrex ;
+		// using namespace dbjsys::fm::bstr ;
 		os_ << L"\t" << counter_() << L" :\t\t" << the_pair.second << std::endl ;
 	}
 } ;
@@ -100,7 +100,7 @@ inline const void run( std::wostream & os , const _bstr_t & test_id = null_test_
 	}
 	else {
 		// can  we find the test axed for ?
-		sequence_type::iterator & location = std::find_if( 
+		const sequence_type::iterator & location = std::find_if( 
 			sequence()->begin(), 
 			sequence()->end(), 
 			comparator(test_id ) 
@@ -172,7 +172,7 @@ struct DBJtest
 } ;
 //------------------------------------------------------------------
 // printf-like output to the result logfile
-inline void dbgout(wchar_t * pszFormat, ...) 
+inline void dbgout( const wchar_t * pszFormat, ...) 
 {
   static const unsigned long BUFLEN =  BUFSIZ * 2 ; // 1024 ... plenty...
   static wchar_t szBuff[BUFLEN] = L"" ;
@@ -190,13 +190,19 @@ inline void dbgout(wchar_t * pszFormat, ...)
   va_end(arglist);
 }
 
-inline void dbgout(wchar_t * pszFormat, _variant_t & variant_arg ) 
+inline void dbgout( const wchar_t * pszFormat,  _bstr_t & bart )
 {
-	_bstr_t bstr((_bstr_t)variant_arg ) ;
-	wchar_t * wstr = (wchar_t *)bstr ;
+	wchar_t * wstr = (wchar_t *)bart;
 	DBJ_VERIFY( wstr) ;
 	dbgout( pszFormat, wstr ) ;
 }
+
+inline void dbgout(const wchar_t * pszFormat,  _variant_t & variant_arg)
+{
+	_bstr_t bart((_bstr_t)variant_arg);
+	dbgout(pszFormat, bart);
+}
+
 //-----------------------------------------------------------------------
 } // test 
 } // dbj

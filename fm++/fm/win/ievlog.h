@@ -34,8 +34,8 @@ namespace dbjsys {
 	namespace fm {
 
 		static _bstr_t bstr_file = __FILE__;
-		static wchar_t* EVENTLOG_REG_LOCATION = L"SYSTEM\\CurrentControlSet\\Services\\EventLog";
-		static wchar_t* EVENTLOG_FILEPATH = L"%SystemRoot%\\system32\\config";
+		static const wchar_t* EVENTLOG_REG_LOCATION = L"SYSTEM\\CurrentControlSet\\Services\\EventLog";
+		static const wchar_t* EVENTLOG_FILEPATH = L"%SystemRoot%\\system32\\config";
 
 // interface to objectified WIN32 API for event logging -----------
 template<class T> class IEvLog {
@@ -195,7 +195,7 @@ public:
 	bool createEventLogSource(const SourceDetails & sourcedetails)
 	{
 		using namespace dbjsys::fm;
-		using namespace dbjsys::fm::bstrex;
+		using namespace dbjsys::fm::bstr;
 
 
 		//if( doesEventLogSourceExist( sourcedetails.eventLogName, sourcedetails.sourceName ) )
@@ -318,7 +318,7 @@ public:
 	bool createEventLog(const Details & details)
 	{
 		using namespace dbjsys::fm;
-		using namespace dbjsys::fm::bstrex;
+		using namespace dbjsys::fm::bstr;
 
 		if (doesEventLogExist(details.eventLogName))
 			return true; // need to tell user !!!

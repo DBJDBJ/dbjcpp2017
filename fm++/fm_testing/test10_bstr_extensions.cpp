@@ -14,20 +14,19 @@ bstr_t & operator + ( bstr_t & b1, const bstr_t & b2 )
 */
 extern "C" void test10_bstr_extensions()
 {
-	using namespace dbjsys::fm::bstrex ;
+	using wbstr = dbjsys::fm::bstr::wbstr  ;
 
-	bstr bstr ;
 	const wchar_t * const wsP = L" + WIDE STRING POINTER" ;
 	wchar_t ws [] = L" + WIDE STRING" ;
 
 	
-	bstr = wsP ;
-	bstr = ws  ;
+	wbstr b1(wsP) ;
+	wbstr b2(ws)  ;
 
-	bstr = std::wstring(L" + STD::WSTRING") ;
+	// b1 = std::wstring(L" + STD::WSTRING") ;
 
 	// 
-	bstr = bstr ;
+	b1 = b2 ;
 }
 
 //-----------------------------------------------------------------

@@ -15,8 +15,6 @@
 //  $Revision: $
 //*****************************************************************************/
 
-#if ! defined ( _dbjsys_fm_timer_H_ )
-#define _dbjsys_fm_timer_H_ 1
 #pragma once
 #include <time.h>
 #include <sys/types.h> 
@@ -25,6 +23,7 @@
 //---------------------------------------------------------------------------------------
 namespace dbjsys {
 	namespace fm {
+		void ss_timer_display(const _bstr_t &);
 //---------------------------------------------------------------------------------------
 //
 //
@@ -171,4 +170,4 @@ inline const  _timeb timer::GetTimeElapsed()
 	} ; // fm
 }; // dbjsys
 //---------------------------------------------------------------------------------------
-#endif // _dbjsys_fm_timer_H_ 1
+

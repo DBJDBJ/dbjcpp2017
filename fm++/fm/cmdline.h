@@ -30,21 +30,23 @@ namespace dbjsys { namespace fm  {
 	/* Command Line Interface */
 	class CLI {
 	public:
-		using bstr = dbjsys::fm::bstrex::bstr;
 #ifdef _UNICODE
-		using string = std::wstring;
+		typedef typename std::wstring string;
+		using bstr = dbjsys::fm::bstr::wbstr ;
 #else
-		using string = std::string;
+		typedef typename std::string string;
+		using bstr = dbjsys::fm::bstr::nbstr;
 #endif
-		typedef std::vector<string> CLIVector;
-		typedef CLIVector::iterator Iterator_type;
+
+		typedef typename std::vector<string> CLIVector;
+		typedef typename CLIVector::iterator Iterator_type;
 		using value_type = CLIVector::value_type ;
 
-		class NotFound : protected std::runtime_error {
-			NotFound();
+		class not_found : protected std::runtime_error {
+			not_found();
 		public:
 			// notorious std::exception suite dos work only with narrow strings
-			NotFound(const std::string & m_) : runtime_error(m_) {
+			not_found(const std::string & m_) : runtime_error(m_) {
 			}
 			const char * what() const noexcept {
 				auto msg = std::string("dbj::fm::CLI::Error") + " not found: " + this->runtime_error::what();
@@ -55,7 +57,7 @@ namespace dbjsys { namespace fm  {
 		CLIVector args_vec;
 	public:
 		// argument 0 from the command line
-		const value_type & exe_name() const noexcept 
+		const string & exe_name() const noexcept
 		{
 #ifdef _UNICODE
 			static string executable = __wargv[0]; 
@@ -108,7 +110,7 @@ namespace dbjsys { namespace fm  {
 
 		// return -1 if not found or index to the element found in the vector of arguments
 		auto find(const char * const tag_) const {
-			CLI::string tag = fm::bstrex::bstr_cast<CLI::string>(tag_, false);
+			CLI::string tag = fm::bstr::cast<CLI::string>(tag_, false);
 				auto iter = std::find(args_vec.begin(), args_vec.end(), tag);
 					return (iter == args_vec.end() ? -1 : std::distance(args_vec.begin(), iter));
 		}
@@ -123,7 +125,7 @@ namespace dbjsys { namespace fm  {
 				try {
 					auto vt = (*this)[cl_symbol];
 					return (T)vt;
-				}catch (CLI::NotFound &) {
+				}catch (CLI::not_found &) {
 					return default_value;
 				}
 				catch (...) {
@@ -141,43 +143,48 @@ namespace dbjsys { namespace fm  {
 		{
 			auto pos = find(cl_symbol);
 			if (pos == -1)
-				throw CLI::NotFound(cl_symbol);
+				throw CLI::not_found(cl_symbol);
 			return _variant_t(args_vec[pos].data());
 		}
-
+#ifdef _UNICODE
+		const wchar_t key_prefix = L'-';
+#else
 		const char key_prefix = '-';
-		bool is_key(const string & s_) const noexcept {
-			const char * tag = _bstr_t(s_.data());
-				return tag[0] == key_prefix;
+#endif
+		bool is_key(const size_t & pos ) const noexcept {
+				return args_vec[pos][0] == key_prefix;
 		}
 
 		using kvpair = std::pair<string, std::vector<string> >;
-		/*
-		return key value pair found by key 
-		value is vector of strings, consider example of a (slightly weird but valid) CL:
-		-? -t 13 -name Abra Ka Dabra -bool TRUE
-		above makes all the kvpairs like these:
-		"-?", {}
-		"-t", { "13" }
-		"-name", { "Abra", "Ka", "Dabra" }
-		"-bool", { "TRUE" }
-		*/
-		 kvpair kv( const string & key) {
-				 auto iter1 = std::find(args_vec.begin(), args_vec.end(), key);
+		///<summary>
+		///return key value pair found by key 
+		///value is vector of strings, consider example of a (slightly weird but valid) CL:
+		///<code>-? -t 13 -name Abra Ka Dabra -bool TRUE</code>
+		///above makes all the kvpairs like these:
+		///<code>
+		///"-?", {}
+		///"-t", { "13" }
+		///"-name", { "Abra", "Ka", "Dabra" }
+		///"-bool", { "TRUE" }
+		///</code>
+		///</summary>
+		 kvpair kv( const dbjsys::fm::bstr::nbstr & key) const {
+				 auto kpos = find(key);
 
-			 if (iter1 == args_vec.end())
-				     throw CLI::NotFound((char *)_bstr_t(key.data()));
+			 if (kpos == -1)
+				     throw not_found(key);
 
-			 auto iter2 = ++ iter1;
+			 size_t kpos2 = ++ kpos  ;
+			 kvpair::second_type vec;
 
-			 while (iter2 != args_vec.end()) {
-				 ++ iter2 ;
-				 if (is_key(*iter2)) {
+			 while (kpos2 < args_vec.size()) {
+				 if (is_key(kpos2)) {
 					 break;
 				 } 
+				 vec.push_back(args_vec[kpos2]);
+				 ++ kpos2;
 			  }
-			 kvpair::second_type vec(iter1, iter2);
-			 return std::make_pair(key, vec);
+			 return std::make_pair((string)key, vec);
 		}
 
 	}; // eof CLI 
@@ -199,7 +206,7 @@ namespace dbjsys { namespace fm  {
 			return (CLI::value_type)_bstr_t(CLI::singleton()[cl_tag]);
 #endif
 		}
-		catch (CLI::NotFound &){
+		catch (CLI::not_found &){
 			return def_val;
 		}
 	}

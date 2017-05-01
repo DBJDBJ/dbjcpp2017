@@ -24,53 +24,99 @@
 //*****************************************************************************/
 namespace dbjsys {
 	namespace fm {
-		namespace bstrex {
-			class bstr_conversion {
+		namespace bstr {
+
+			///<sumary>
+			/// to handle std::string and std::wstring integration with _bstr_t from comutil.h
+			///</sumary>
+			template<typename T>
+			class bstr_std_string {
+				_bstr_t bart;
 			public:
-				typedef Error<bstr_conversion> Err;
-			};
+				typedef typename T::value_type char_type;
 
-			using Err = bstr_conversion::Err ;
-/**/
-			class bstr : public _bstr_t {
-			public:
-				
-				using parent = _bstr_t;
+				~bstr_std_string() { bart.Detach(); }
 
-				bstr() : parent() { }
-				~bstr() { delete(this); }
+				bstr_std_string(const _bstr_t & bstring) : bart(bstring) { }
 
-				bstr( std::wstring ws) : parent(ws.data()) { }
-				const bstr & operator = (const std::wstring & ws) { 
-					this->Assign(parent(ws.data())); return *this; 
+				bstr_std_string(const T & string) : bart(string.data()) { }
+
+				bstr_std_string(const char_type * const cp) : bart(cp) { }
+
+				bstr_std_string(const bstr_std_string & right) : bart(right.bart) {}
+
+				const bstr_std_string & operator = (const _bstr_t & bstring) {
+					bart = bstring ; return *this;
 				}
-				operator const std::wstring() const noexcept { return std::wstring((wchar_t *)(*this)); }
 
-				bstr( std::string st) : parent(st.data()) { }
-				const bstr & operator = (const std::string & st) { 
-					this->Assign(parent(st.data())); return *this;
-				}
-				operator const std::string() const noexcept { return std::string((char *)(*this)); }
-
-				bstr & operator << ( const _bstr_t & b2)
-				{
-					// CLI * that = reinterpret_cast<CLI*>(this);
-					(*this) += b2; //  right;
+				const bstr_std_string & operator = (const bstr_std_string & right ) {
+					if (bart != right.bart) bart = right.bart;
 					return *this;
 				}
 
+				const bstr_std_string & operator = (const T & string ) {
+					bart = bart(string.data()); return *this; 
+				}
+
+				const bstr_std_string & operator = (const char_type & cp ) {
+					bart = bart(cp); return *this;
+				}
+
+				// "modern" stuff
+				void swap(bstr_std_string & right) {
+					std::swap(this->bart, right.bart);
+				}
+
+				friend void swap( bstr_std_string & b1, bstr_std_string & b2 ) {
+					std::swap(b1.bart,b2.bart);
+				}
+
+				bstr_std_string (bstr_std_string && right) : bart("") {
+					this->swap(right);
+				}
+
+				const bstr_std_string & operator = (bstr_std_string && right) {
+					this->swap(right);
+					return *this;
+				}
+
+				// so called "extractors"
+				// operator const T() const noexcept { return T((char_type *)bart); }
+				operator const char_type *() const noexcept { return (char_type *)bart; }
+
+				operator const std::wstring () const noexcept { return std::wstring((wchar_t *)bart); }
+				operator const std::string  () const noexcept { return std::string((char *)bart); }
+
+#if 0
+				bstr_std_string & operator << ( const _bstr_t & b2)
+				{
+					bart += b2; 
+					return *this;
+				}
+#endif
 			};
+
+			///<summary>
+			/// wide bstr_std_string
+			///</summary>
+			typedef bstr_std_string<typename std::wstring> wbstr;
+			///<summary>
+			/// narrow bstr_std_string
+			///</summary>
+			typedef bstr_std_string<typename std::string>  nbstr ;
+
+
 
 #if 0
 			//--------------------------------------------------------------
 			// here are the explicit  operators to help compiler to resolve
 			// what it thinks is ambigious
 			DBJINLINE
-				bstr & operator << (bstr & b1, const bstr & b2)
+				bstr_std_string & operator << (bstr_std_string & b1, const bstr_std_string & b2)
 			{
 				_bstr_t left((char *)b1);
 				_bstr_t right((char *)b2);
-				return b1 = bstr(left + right);
+				return b1 = bstr_std_string(left + right);
 			}
 #endif
 
@@ -124,9 +170,9 @@ namespace dbjsys {
 		// assign std::string to _bstr_t
 		DBJINLINE
 			_bstr_t &
-			assign_to_bstr_t_(_bstr_t & bstr, const std::string & ws_)
+			assign_to_bstr_t_(_bstr_t & bstr_std_string, const std::string & ws_)
 		{
-			return bstr = static_cast<const char *>(ws_.c_str());
+			return bstr_std_string = static_cast<const char *>(ws_.c_str());
 		}
 		// assign _bstr_t to std::string
 		DBJINLINE
@@ -142,10 +188,10 @@ namespace dbjsys {
 		// assign wchar_t * to _bstr_t
 		DBJINLINE
 			_bstr_t &
-		assign_to_bstr_t_ ( _bstr_t & bstr, const wchar_t * ws_ ) 
+		assign_to_bstr_t_ ( _bstr_t & bstr_std_string, const wchar_t * ws_ ) 
 		{
 			dbjVERIFY( ws_ ) ;
-			return bstr = static_cast<const wchar_t *>(ws_) ;
+			return bstr_std_string = static_cast<const wchar_t *>(ws_) ;
 		}
 		// assign _bstr_t to  wchar_t * 
 		DBJINLINE
@@ -161,9 +207,9 @@ namespace dbjsys {
 		// assign std::wstring to _bstr_t
 		DBJINLINE
 			_bstr_t &
-			assign_to_bstr_t_(_bstr_t & bstr, const std::wstring & ws_)
+			assign_to_bstr_t_(_bstr_t & bstr_std_string, const std::wstring & ws_)
 		{
-			return bstr = ws_.data() ;
+			return bstr_std_string = ws_.data() ;
 		}
 		// assign _bstr_t to std::wstring
 		DBJINLINE
@@ -181,21 +227,21 @@ namespace dbjsys {
 		// which are declaring those types. But in this same namespace.
 		//---------------------------------------------------------------------------------------
 		DBJINLINE
-		std::wostream & assign_from_bstr_t_(std::wostream & t_, const bstr_t & bstr)
+		std::wostream & assign_from_bstr_t_(std::wostream & t_, const bstr_t & bstr_std_string)
 		{
-			return t_ << ((const wchar_t*)bstr);
+			return t_ << ((const wchar_t*)bstr_std_string);
 		}
 		// wostream to bstr_t -- a tricky one !
 		DBJINLINE
-			bstr_t & assign_from_bstr_t_(bstr_t & bstr, const std::wostream & t_)
+			bstr_t & assign_from_bstr_t_(bstr_t & bstr_std_string, const std::wostream & t_)
 		{
 			std::wostringstream wos;
 			wos << t_.rdbuf();
-			bstr += wos.str().c_str();
-			return bstr;
+			bstr_std_string += wos.str().c_str();
+			return bstr_std_string;
 		}
 #endif
-		//------------------------------------------------------------------------
+#if 0
 		//
 	    // By defining the two operatos bellow we provoke the compiler to 
 		// use them and in turn to signal which versions of
@@ -203,32 +249,35 @@ namespace dbjsys {
 		// are yet to be defined. 
 		//
 		//
-		// streaming INTO the bstr FROM the instance of type T
+		// streaming INTO the bstr_std_string FROM the instance of type T
 		template <typename T>
 		DBJINLINE
-			bstr & operator << (bstr & bstr, const  T & t )
+			bstr_std_string<T> & operator << (bstr_std_string<T> & bstr_std_string, const  T & t )
 		{
-			return bstr = t ;
+			return bstr_std_string = t ;
 		}
 
 		// streaming FROM the _bstr_t INTO the instance of type T
 		template <typename T>
 			DBJINLINE
-		T & operator << ( T & t_, const bstr & bstr )
+		T & operator << ( T & t_, const bstr_std_string<T> & bstr_std_string )
 		{
-			return  t = bstr ;
+			return  t = bstr_std_string ;
 		}
+#endif
 			// try casting ARG to T using the _bstr_t
 			// T has to be copyable
 			template<typename T, typename ARG>
 			DBJINLINE
-				T bstr_cast( const ARG & arg, bool kick_the_bucket = true) {
+				T cast( const ARG & arg, bool kick_the_bucket = true) {
 
-				static_assert(std::is_copy_constructible<T>::value, __FUNCTION__ " error: type T is not copy constructible");
+				static_assert(std::is_copy_constructible<T>::value, 
+					__FILE__ " -- " __FUNCTION__ " -- error: type is not copy constructible"
+					);
 
 				try {
 					_bstr_t bart(arg);
-					return (T)bart;
+					return static_cast<T>(bart);
 				}
 				catch (const ::_com_error & cerr_) {
 					if (kick_the_bucket) {
@@ -238,7 +287,7 @@ namespace dbjsys {
 
 			}
 //*****************************************************************************/
-		} // namespace bstrex 
+		} // namespace bstr_std_string 
 	} // fm
 }  // dbjsys
 //*****************************************************************************/

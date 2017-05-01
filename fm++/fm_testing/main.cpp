@@ -10,8 +10,6 @@
 
 #include "test_declarations.h"
 
-using bstr = dbjsys::fm::bstrex::bstr;
-
 namespace {
 
 void show_help_screen( const wchar_t * exe_name, std::wostream & os = std::wclog )
@@ -70,15 +68,23 @@ void show_help_screen( const wchar_t * exe_name, std::wostream & os = std::wclog
 //-----------------------------------------------------------------------
 
 int wmain ( int argc, wchar_t ** argv )
+
 {
+	using bart = dbjsys::fm::bstr::nbstr ;
+
 	try {
 		auto cli = dbjsys::fm::CLI::singleton();
 		auto vt = cli["-?"]; // vt is of variant type after this line
 		// long lv = cli["-?"]; // vt to long happens and throws the exception
-		int  iv = cli("-?", 13); // -? has no value and default 13 is returned
+//		int  iv = cli("-?", 13); // -? has no value and default 13 is returned
 
 		 // TODO: Fix This
-		auto kv = cli.kv(bstr("-?"));
+		try {
+			auto kv = cli.kv("-?");
+			auto vc = kv.second;
+			// auto vl = vc.size() > 0 ? dbjsys::fm::CLI::string(vc.begin(), vc.end()) : dbjsys::fm::CLI::string() ;
+		}	catch (dbjsys::fm::CLI::not_found &) {
+		}
 #if 0
 		dbjsys::fm::cli_argument_string  cl_arg(L"~"); // def.val. is  L"~"
 

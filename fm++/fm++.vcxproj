@@ -91,6 +91,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/bigobj /await /std:c++latest /d1permissive- /Zc:strictStrings %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -117,6 +118,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/bigobj /await /std:c++latest /d1permissive- /Zc:strictStrings %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -182,7 +184,7 @@
     <ClInclude Include="fm\token.h" />
     <ClInclude Include="fm\uid.h" />
     <ClInclude Include="fm\variant_extensions.h" />
-    <ClInclude Include="fm\win\bstrex.h" />
+    <ClInclude Include="fm\win\bstr.h" />
     <ClInclude Include="fm\win\checkversion.h" />
     <ClInclude Include="fm\win\event.h" />
     <ClInclude Include="fm\win\event_log.h" />

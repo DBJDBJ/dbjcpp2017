@@ -149,7 +149,7 @@ public :
 //-----------------------------------------------------------------------
 inline void showresult ( const std::string & ss )
 {
-   using namespace dbjsys::fm::bstrex;
+   using namespace dbjsys::fm::bstr;
    prompt( L"\nASCII string: [") << bstr_t(ss.c_str()) << "]" ;
 }
 //-----------------------------------------------------------------------

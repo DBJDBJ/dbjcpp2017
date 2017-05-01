@@ -15,14 +15,12 @@
 //  $Revision: $
 //*****************************************************************************/
 
-//	All inline version of a simple but important UID .
+//	All DBJINLINE  version of a simple but important UID .
 //
 //	Most important operations are relational operators
 //	generated.
 //	Library of Sub-System Mechanisms
 
-#ifndef _dbjsys_fm_bsuid_h
-#define _dbjsys_fm_bsuid_h 1
 #pragma once
 //---------------------------------------------------------------------------------------
 namespace dbjsys {
@@ -65,7 +63,7 @@ public:
 
 
 	// 
-     UID::~UID()    {
+     ~UID()    {
         //val = UID::NullValue ;
     }
 
@@ -127,10 +125,10 @@ private:
 ///////////////////////////////////////////////////////////////////////////////////////////
 // 
 // Class UID 
-// inline implementation
+// DBJINLINE  implementation
 // 
 ///////////////////////////////////////////////////////////////////////////////////////////
-inline const UID & UID::operator=(const UID &right)
+__forceinline const UID & UID::operator=(const UID &right)
 {
     if ( this != &right )
 	    val = right.getVal();
@@ -138,59 +136,59 @@ inline const UID & UID::operator=(const UID &right)
 }
 
 
-inline bool operator==(const UID &left,const UID &right)
+DBJINLINE  bool operator==(const UID &left,const UID &right)
 {
   	return (left.getVal() == right.getVal());
 }
 
-inline bool operator!=(const UID &left,const UID &right)
+DBJINLINE  bool operator!=(const UID &left,const UID &right)
 {
     return (left.getVal() != right.getVal());
 }
 
 
-inline bool operator<(const UID &left,const UID &right)
+DBJINLINE  bool operator<(const UID &left,const UID &right)
 {
     return (left.getVal() < right.getVal());
 }
 
-inline bool operator>(const UID &left,const UID &right)
+DBJINLINE  bool operator>(const UID &left,const UID &right)
 {
     return (left.getVal() > right.getVal());
 }
 
-inline bool operator<=(const UID &left,const UID &right)
+DBJINLINE  bool operator<=(const UID &left,const UID &right)
 {
   	return (left.getVal() <= right.getVal());
 }
 
-inline bool operator>=(const UID &left,const UID &right)
+DBJINLINE  bool operator>=(const UID &left,const UID &right)
 {
   	return (left.getVal() >= right.getVal());
 }
 
 
-inline std::ostream & operator<<(std::ostream &stream,const UID &right)
+DBJINLINE  std::ostream & operator<<(std::ostream &stream,const UID &right)
 {
   	return stream << right.getVal() ;
 }
 
-inline std::istream & operator>>(std::istream &stream,UID &object)
+DBJINLINE  std::istream & operator>>(std::istream &stream,UID &object)
 {
   	return stream >> object.val ;
 }
 
-inline UID::type UID::getVal () const
+__forceinline  UID::type UID::getVal () const
 {
   return val ;
 }
 
-inline const _bstr_t UID::asString () const
+__forceinline  const _bstr_t UID::asString () const
 {
-    return _variant_t(this->val); 
+    return (_bstr_t)_variant_t(this->val); 
 }
 
-inline UID &  UID::operator << (const wchar_t * wstr)
+__forceinline  UID &  UID::operator << (const wchar_t * wstr)
 {
     dbjVERIFY (( 0 != wstr ))  ;
     val = (UID::type)_wtol(wstr) ;
@@ -200,6 +198,3 @@ inline UID &  UID::operator << (const wchar_t * wstr)
 	} ; // fm
 }; // dbjsys
 //---------------------------------------------------------------------------------------
-
-
-#endif

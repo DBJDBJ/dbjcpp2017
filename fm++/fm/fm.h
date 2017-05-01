@@ -157,7 +157,7 @@ so
 // WIN32 platform extensions
 //
 #include "variant_extensions.h"
-#include "win/bstrex.h"
+#include "win/bstr.h"
 #include "win/scmquery.h"
 #include "win/checkversion.h"
 #include "win/stringr.h"
