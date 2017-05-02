@@ -162,6 +162,37 @@ extern "C" void test_CmdLineArguments()
 static const int dummy0 = DBJTESTREG(test_CmdLineArguments);
 #endif
 
+/**********************************************************************************/
+DBJINLINE std::wostream & operator << (std::wostream & wos, const std::string & ss)
+{
+	return wos << (wchar_t*)_bstr_t(ss.c_str());
+}
+//
+extern"C"  void token_test()
+{
+	btokenizer btoken(L"01234;5678;9", L";");
+	prompt(L"tokenizerT<_bstr_t>");
+	prompt(L"First word = ") << (wchar_t*)btoken[0];
+	prompt(L"Second word = ") << (wchar_t*)btoken.getWord(1);
+	prompt(L"Third word = ") << (wchar_t*)btoken.getWord(2);
+
+	tokenizer token("01234;5678;9", ";");
+	prompt(L"tokenizerT<std::string>");
+	prompt(L"First word = ") << token[0];
+	prompt(L"Second word = ") << token.getWord(1);
+	prompt(L"Third word = ") << token.getWord(2);
+
+
+	wtokenizer wtoken(L"01234;5678;9", L";");
+	prompt(L"tokenizerT<std::wstring>");
+	prompt(L"First word = ") << wtoken[0];
+	prompt(L"Second word = ") << wtoken.getWord(1).c_str();
+	prompt(L"Third word = ") << wtoken.getWord(2).c_str();
+
+	return;
+}
+
+
 //-----------------------------------------------------------------------
 // Register the test[s]
 //-----------------------------------------------------------------------

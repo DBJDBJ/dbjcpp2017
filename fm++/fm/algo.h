@@ -151,14 +151,10 @@ bool compareNoCase( const T & s1, const T & s2 )
 //
 //
 DBJINLINE
-void stringtrim( _bstr_t & _bstr_arg )
+void stringtrim(std::wstring & s_ )
 {
 	static const wchar_t SPACE_CHAR = L' ' ;
-
-	if( _bstr_arg.length() < 1 ) return ;
-
-	std::wstring s_(_bstr_arg) ;
-
+		if(s_.length() < 1 ) return ;
 	std::wstring	result ;
 	size_t		nonSpacePos = s_.find_first_not_of( SPACE_CHAR,0 ) ;
 
@@ -175,8 +171,6 @@ void stringtrim( _bstr_t & _bstr_arg )
 		result = s_.substr( 0, nonSpacePos+1 ) ;
 		s_ = result ;  // change the string sent
 	}
-	//
-	_bstr_arg = s_.c_str() ;
 }
 //--------------------------------------------------------------
 /*
