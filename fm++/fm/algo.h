@@ -25,6 +25,8 @@
 #include "fm.h"
 #include "glob.h"
 #include "timestamp.h"
+#include <optional>
+
 /*
 
 Warning	413	warning C4996: '_ftime64': This function or variable may be unsafe. 
@@ -61,7 +63,7 @@ namespace dbjsys {
 //--------------------------------------------------------------------------------
 
 #if ! defined( npos )
-static const size_t npos = (size_t)-1;
+static constexpr size_t npos = (size_t)-1;
 #endif
 
 //--------------------------------------------------------------------------------
@@ -71,14 +73,9 @@ One macro we do not want as a macro
 #define issign(c) ((c) == '+' ? 1 : ( (c) == '-' ? 1 : 0) ) 
 
 */
-DBJINLINE bool issign ( const wchar_t & c )
+DBJINLINE constexpr bool issign ( const wchar_t & c ) noexcept
 {
-	if ( c == L'+' ) 
-		return true ;
-	else if ( c == L'-' )
-		return true ;
-	else
-		return false ;
+	return (c == L'+') || (c == L'-') ? true : false;
 }
 //--------------------------------------------------------------------------------
 // case insensitive string compare
@@ -86,34 +83,49 @@ DBJINLINE bool issign ( const wchar_t & c )
 // this would work only for ANSI code
 //
 /*
-TODO
-this introduces dependancy on std
-reimplement using _bstr_t only
+reimplement using _bstr_t only?
 */
-template< typename T = std::string >
-class NocaseStrEqual : public std::equal_to<T> {
+class NocaseStrEqual {
 public:
 	//strcmp
-    bool operator()(const std::string & x, const std::string & y ) const
-    {
-        LPCTSTR lpString1 = x.c_str() ;
-        LPCTSTR lpString2 = y.c_str() ;
+	bool operator()(const _bstr_t & x, const _bstr_t & y) const
+	{
+		const char * lpString1 = (char *)x ;
+		const char * lpString2 = (char *)y ;
 
-       int result = CompareString(
+		int result = CompareStringA(
+			LOCALE_SYSTEM_DEFAULT,// locale identifier
+			NORM_IGNORECASE,      // comparison-style options
+			lpString1,            // first string
+			(long)strlen(lpString1),             // size of first string
+			lpString2,            // second string
+			(long)strlen(lpString2)              // size of second string
+		);
+		dbjVERIFY(result);
+		return result == CSTR_EQUAL;
+	}
+	
+	bool operator()(const std::string & x, const std::string & y ) const
+    {
+		const char * lpString1 = x.data();
+		const char * lpString2 = y.data();
+
+       int result = CompareStringA(
                   LOCALE_SYSTEM_DEFAULT,// locale identifier
                   NORM_IGNORECASE,      // comparison-style options
                   lpString1,            // first string
-                  x.size(),             // size of first string
+		   (long)x.size(),             // size of first string
                   lpString2,            // second string
-                  y.size()              // size of second string
+		   (long)y.size()              // size of second string
         );
-
+	   dbjVERIFY(result);
        return result == CSTR_EQUAL ;
     }
-    bool operator()(const T & x, const T & y ) const
+
+    const bool operator()(const std::wstring & x, const std::wstring & y ) const
     {
-        const wchar_t * lpString1 = static_cast<const wchar_t *>(x);
-        const wchar_t * lpString2 = static_cast<const wchar_t *>(y) ;
+        const wchar_t * lpString1 = x.data();
+		const wchar_t * lpString2 = y.data();
 
        size_t result = CompareStringW(
                   LOCALE_SYSTEM_DEFAULT,// locale identifier
@@ -123,25 +135,17 @@ public:
                   lpString2,            // second string
                   (long)wcslen(lpString2)              // size of second string
         );
-
-       //if( 0 == result )
-       //  throw IError(dbjsys::fm::doctor::errstring() ) ;
-	  
 	   dbjVERIFY(result);
-
        return result == CSTR_EQUAL ;
     }
-
 } ;
 
 //----------------------------------------------------------------------------
 template< typename T >
 DBJINLINE
-bool compareNoCase( const T & s1, const T & s2
-                          /* , std::equal_to<std::string> & comparator =  NocaseStrEqual() */ 
-                          ) 
+bool compareNoCase( const T & s1, const T & s2 ) 
 {
-    return NocaseStrEqual<T>()(s1,s2) ;
+    return NocaseStrEqual()(s1,s2) ;
 }
 //----------------------------------------------------------------------------
 //
@@ -177,12 +181,13 @@ void stringtrim( _bstr_t & _bstr_arg )
 //--------------------------------------------------------------
 /*
 TODO 
-this is clever but ot necessary
+this is clever but not necessary
 use _variant_t instead
 */
-DBJINLINE
- int safeAtoi( const wchar_t * cstr_ , int & result_ )
+DBJINLINE int safeAtoi( const wchar_t * cstr_  )
 {
+	return (int)_variant_t( cstr_);
+#if 0
 	static const int BAD = 0 , GOOD = ! BAD ;
 
 	result_ = 0 ;
@@ -209,6 +214,7 @@ DBJINLINE
 			return BAD ;
 	
 	return GOOD ;
+#endif
 }
 //----------------------------------------------------------------------------
 //
@@ -610,15 +616,34 @@ DBJINLINE long wstr2long(wchar_t * wstr_) {
 	return result;
 }
 /*
-TODO move this to WIN part 
+Important
+
+This API cannot be used in applications that execute in the Windows Runtime. For more information, 
+see CRT functions not supported with /ZW.
+https://docs.microsoft.com/en-us/cpp/cppcx/crt-functions-not-supported-in-universal-windows-platform-apps
+
+NOTE 
+
+There is no workaround
 */
-DBJINLINE const wchar_t * envvar(const wchar_t * env_var_name_)
+DBJINLINE const std::optional<wchar_t *> envvar(const wchar_t * env_var_name_, const wchar_t * defval = nullptr )
 {
 	static size_t bufsiz = BUFSIZ;
-	static wchar_t *buffer[BUFSIZ] = {};
-	std::memset(buffer, 0, BUFSIZ - 1);
-	_ASSERT(_wdupenv_s(buffer, &bufsiz, env_var_name_));
-	return *buffer;
+	static std::wstring buffer; 
+	errno_t err = {};
+
+	buffer.resize(BUFSIZ, 0x0000);
+	auto * buff_pointer = &buffer[0];
+
+	if (0 == (err = _wdupenv_s(&buff_pointer, &bufsiz, env_var_name_)))
+	{
+		if (buff_pointer != NULL)
+			return buff_pointer;
+		else
+			return {};
+	}
+
+	dbjFMERR("ENVVAR Not found");
 }
 //-----------------------------------------------------------------------------
 // TODO constants and literals definitely to be moved to a separate single structure
@@ -627,8 +652,10 @@ DBJINLINE const wchar_t * envvar(const wchar_t * env_var_name_)
 DBJINLINE bool cut_down_to_size(int logfile_handle_)
 {
 	bool was_downsized = false;
-	
-	const _bstr_t log_size_env_var = envvar(glob::ENVVAR_NAME_DBJLOGSIZE);
+	auto dbj_log_size = envvar(glob::ENVVAR_NAME_DBJLOGSIZE);
+	if (!*dbj_log_size) dbjFMERR(glob::ENVVAR_NAME_DBJLOGSIZE);
+
+	const _bstr_t log_size_env_var = dbj_log_size.value();
 
 	long allowed_size_ = wstr2long(log_size_env_var);
 

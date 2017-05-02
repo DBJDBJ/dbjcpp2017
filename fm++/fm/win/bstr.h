@@ -269,7 +269,7 @@ namespace dbjsys {
 			// T has to be copyable
 			template<typename T, typename ARG>
 			DBJINLINE
-				T cast( const ARG & arg, bool kick_the_bucket = true) {
+				T cast( const ARG & arg ) {
 
 				static_assert(std::is_copy_constructible<T>::value, 
 					__FILE__ " -- " __FUNCTION__ " -- error: type is not copy constructible"
@@ -280,11 +280,9 @@ namespace dbjsys {
 					return static_cast<T>(bart);
 				}
 				catch (const ::_com_error & cerr_) {
-					if (kick_the_bucket) {
 						assert(0 && cerr_.ErrorMessage()); /* conversion failed */
-					}
 				}
-
+				return {};
 			}
 //*****************************************************************************/
 		} // namespace bstr_std_string 

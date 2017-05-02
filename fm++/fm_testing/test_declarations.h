@@ -35,9 +35,10 @@ TESTAPI void exception_testing(  void ) ;
 TESTAPI void test13_clustering() ;
 
 TESTAPI void test10_bstr_extensions() ;
-
+*/
 TESTAPI void wrapwrap_test ( void) ;
 TESTAPI void wrap_test( void ) ;
+/*
 TESTAPI void evlog_test( void ) ;
 
 TESTAPI void test_CmdLineArguments ( void ) ;

@@ -73,6 +73,11 @@ int wmain ( int argc, wchar_t ** argv )
 	using bart = dbjsys::fm::bstr::nbstr ;
 
 	try {
+		wrap_test();
+		wrapwrap_test();
+		// testing_.run("wrap_test", std::wcout);
+		// testing_.run("wrapwrap_test", std::wcout);
+
 		auto cli = dbjsys::fm::CLI::singleton();
 		auto vt = cli["-?"]; // vt is of variant type after this line
 		// long lv = cli["-?"]; // vt to long happens and throws the exception
@@ -136,7 +141,11 @@ int wmain ( int argc, wchar_t ** argv )
 	catch (const std::exception & x) {
 		dbjsys::fm::algo::errBox( TEXT(__FILE__) L"\n%S", x.what() );
 	}
-		return 0 ;
+	catch (wchar_t * x) {
+		dbj::test::dbgout(L"%s ERROR --  %s", argv[0], x);
+		return 2;
+	}
+	return 0 ;
 }
 // EOF
 

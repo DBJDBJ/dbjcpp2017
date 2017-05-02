@@ -109,15 +109,17 @@ namespace dbjsys { namespace fm  {
 		}
 
 		// return -1 if not found or index to the element found in the vector of arguments
+		// tag to be found is asci string but actual parama are CLI::string
+		// that is string or wstring
 		auto find(const char * const tag_) const {
-			CLI::string tag = fm::bstr::cast<CLI::string>(tag_, false);
+			CLI::string tag = fm::bstr::cast<CLI::string>(tag_);
 				auto iter = std::find(args_vec.begin(), args_vec.end(), tag);
 					return (iter == args_vec.end() ? -1 : std::distance(args_vec.begin(), iter));
 		}
 
 		/*
 		main extractor : gets by tag and casts the return value into the type desired
-		uses _bstr_t convertor
+		uses variant as convertor
 		*/
 		template<typename T>
 		T operator () (const char * cl_symbol, const T & default_value ) const
