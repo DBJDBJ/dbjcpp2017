@@ -90,12 +90,18 @@ public :
 		        dbjVERIFY( products.size() >= 0 ) ;
                 dbjVERIFY( products.size() <= UINT_MAX ) ;
                     // first check if this name is already registered
+#if 0
                     ProductPtrVec::const_iterator iter;
                     for( iter = products.begin(); iter != products.end(); iter++ )
                     {
                         if( (*iter).name == name )
                             dbjTHROWERR( "Model name already found. Re-registering is not allowed." );
                     }
+#endif
+					for ( auto prod_name : products ) {
+						if (prod_name == name)
+							dbjTHROWERR("Model name already found. Re-registering is not allowed.");
+					}
                 // Product* p = new Product( name, productionMethod );
 	            products.push_back( Product( name.c_str(), productionMethod ) );	
 	    }
@@ -112,8 +118,8 @@ public :
         {
            BASETYPE * result = 0 ;
    
-           ProductPtrVec::const_iterator iter;
-           for( iter = products.begin(); iter != products.end(); iter++ )
+           // ProductPtrVec::iterator iter;
+           for( auto iter = products.begin(); iter != products.end(); iter++ )
            {
                 if( what == (*iter).name )
                 {
@@ -121,6 +127,7 @@ public :
                     break;
                 }
            }
+
         #ifdef _DEBUG
 			        if ( result ) ::OutputDebugStringA(typeid(result).name()) ;
         #endif

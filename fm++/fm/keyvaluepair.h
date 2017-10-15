@@ -90,10 +90,10 @@ public:
 			for (tokenizer::size_t i = 0; i < tokens.size(); i = i + 2)
 			{
 				key_type key = tokens[i];
-				algo::stringtrim(key);
+				algo::trim(key);
 
 				referent_type val = tokens[i + 1];
-				algo::stringtrim(val);
+				algo::trim(val);
 
 				dbjVERIFY(key.length() > 0);
 				dbjVERIFY(val.length() > 0);

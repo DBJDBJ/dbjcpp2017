@@ -79,10 +79,10 @@ protected:
     typedef STRING Parent ;
     //
     // my little auto buffer
-    template< const int SIZE = BUFSIZ > struct buffer {
-        const int size ;
-        typename STRING::traits_type::char_type * lp ;
-        buffer () : size(SIZE), lp( new STRING::traits_type::char_type[SIZE] ) {} 
+    template< const size_t SIZE = BUFSIZ > struct buffer {
+		typename typedef Parent::traits_type::char_type _char_type ;
+        const size_t & size = SIZE ;
+		_char_type * lp = new _char_type[SIZE] ;
         ~buffer () { delete [] lp ; }
     } ;
     //
@@ -111,7 +111,7 @@ public :
         buffer<BUFSIZ> buffer ;
 
         if ( 0 ==
-            ::LoadStringA((HINSTANCE)NULL, (UINT)id_, buffer.lp , buffer.size ) 
+            ::LoadStringA((HINSTANCE)NULL, (UINT)id_, buffer.lp , static_cast<int>(buffer.size) ) 
             )
             throw std::runtime_error( "stringr::load(), failed " ) ;
         Parent::operator = ( buffer.lp ) ;
@@ -132,7 +132,7 @@ public :
         buffer<BUFSIZ> buffer ;
 
         if ( 0 ==
-            ::LoadStringW((HINSTANCE)NULL, (UINT)id_, buffer.lp , buffer.size ) 
+            ::LoadStringW((HINSTANCE)NULL, (UINT)id_, buffer.lp , static_cast<int>(buffer.size))
             )
             throw std::runtime_error( "wstringr::load(), failed" ) ;
 

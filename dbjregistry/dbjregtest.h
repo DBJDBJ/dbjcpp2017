@@ -147,3 +147,4 @@ namespace dbj {
 #define DBJVERSION __DATE__ __TIME__
 #pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
 #pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION )
+#undef DBJVERSION

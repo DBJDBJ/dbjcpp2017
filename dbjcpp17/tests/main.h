@@ -18,7 +18,7 @@ limitations under the License.
 #include "../../dbjgtest/gtest.h"
 #include "dbj_base_tests.h"
 
-#if 0
+#if 1
 #define DBJVERSION __DATE__ __TIME__
 #pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
 #pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION )

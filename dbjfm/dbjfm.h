@@ -140,7 +140,9 @@ namespace dbj {
 		std::wstring ws(std::begin(range_), std::end(range_));
 		return ws;
 	}
-
+	/*
+	functor accumulator ... see the range_to_string() 
+	*/
 	template<typename T> struct Rez
 	{
 	private:
@@ -167,25 +169,130 @@ namespace dbj {
 		Result retval = std::for_each(std::begin(range_), std::end(range_), Result(delim));
 		return retval.str() ;
 	}
+	// reverse and copy the result but for "any" range that compiler will "take" when calling this
+	template< typename RANGE>
+	DBJINLINE void reverse_copy(RANGE & reversed_copy, const RANGE & original)
+	{
+		using namespace std;
+		reverse_copy(begin(original), end(original), begin(reversed_copy));
+		// no copy result version
+	}
+	template< typename RANGE>
+	DBJINLINE RANGE reverse_copy(const RANGE & original)
+	{
+		using namespace std;
+		RANGE reversed_copy;
+		reverse_copy(reversed_copy, original);
+		return reversed_copy;
+		// result copy, version
+	}
 	/*
+	string utilities
 	*/
 	namespace str {
+		namespace {
+			// case insensitive string compare
+			// (much) faster than std way
+			class NocaseStrEqual {
+			public:
+				const bool operator()(const std::string & x, const std::string & y) const
+				{
+					const char * lpString1 = x.data();
+					const char * lpString2 = y.data();
+
+					int result = CompareStringA(
+						LOCALE_SYSTEM_DEFAULT,// locale identifier
+						NORM_IGNORECASE,      // comparison-style options
+						lpString1,            // first string
+						(long)x.size(),             // size of first string
+						lpString2,            // second string
+						(long)y.size()              // size of second string
+					);
+					DBJ_VERIFY(result);
+					return result == CSTR_EQUAL;
+				}
+
+				const bool operator()(const std::wstring & x, const std::wstring & y) const
+				{
+					const wchar_t * lpString1 = x.data();
+					const wchar_t * lpString2 = y.data();
+
+					size_t result = CompareStringW(
+						LOCALE_SYSTEM_DEFAULT,// locale identifier
+						NORM_IGNORECASE,      // comparison-style options
+						lpString1,            // first string
+						(long)wcslen(lpString1),             // size of first string
+						lpString2,            // second string
+						(long)wcslen(lpString2)              // size of second string
+					);
+					DBJ_VERIFY(result);
+					return result == CSTR_EQUAL;
+				}
+			};
+		}
+		/*
+		public func calls the hidden implementation 
+		NOTE: not safe in presence of multiple threads
+		*/
+		template< typename T >
+		DBJINLINE
+			bool compareNoCase(const T & s1, const T & s2)
+		{
+			static NocaseStrEqual  comparator_instance;
+			return comparator_instance(s1, s2);
+		}
+
+		//----------------------------------------------------------------------------
+		/*
+		http://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+		*/
+		DBJINLINE std::string trim(const std::string &s)
+		{
+			using namespace std;
+
+			auto  wsfront = find_if_not(s.begin(), s.end(), [](int c) {return isspace(c); });
+			return string(
+				wsfront,
+				find_if_not(s.rbegin(),
+					string::const_reverse_iterator(wsfront), [](int c) {return isspace(c); }
+				).base()
+			);
+		}
+
+		DBJINLINE std::wstring trim(const std::wstring &s)
+		{
+			using namespace std;
+
+			auto  wsfront = find_if_not(s.begin(), s.end(), [](int c) {return iswspace(c); });
+			return wstring(
+				wsfront,
+				find_if_not(s.rbegin(),
+					wstring::const_reverse_iterator(wsfront), [](int c) {return iswspace(c); }
+				).base()
+			);
+		}
 		
-		// http://stackoverflow.com/questions/4804298/how-to-convert-wstring-into-string
 		DBJINLINE std::wstring to_wide(const std::string& str)
 		{
-			using convert_typeX = std::codecvt_utf8<wchar_t>;
+			return std::wstring(str.begin(), str.end());
+/*
+// http://stackoverflow.com/questions/4804298/how-to-convert-wstring-into-string
+using convert_typeX = std::codecvt_utf8<wchar_t>;
 			static std::wstring_convert<convert_typeX, wchar_t> converterX;
 			return converterX.from_bytes(str);
+*/
 		}
 		/*
 		this is here for "symetry" ... dbj.org stuff is UNICODE only
 		*/
 		DBJINLINE std::string to_str (const std::wstring& wstr)
 		{
+			return std::string(wstr.begin(), wstr.end());
+/*
 			using convert_typeX = std::codecvt_utf8<wchar_t>;
 			static std::wstring_convert<convert_typeX, wchar_t> converterX;
 			return converterX.to_bytes(wstr);
+			*/
 		}
 
 		/*
@@ -196,6 +303,40 @@ namespace dbj {
 		{
 			return s2.insert(0, s1);
 		}
+#if 0
+		/* string length size_t to DWORD to pacify the MSVC */
+		DBJINLINE DWORD len2dword(const wchar_t * const ws_) {
+			return static_cast<DWORD>(std::wcslen(ws_));
+		}
+
+		DBJINLINE DWORD len2dword(const char * const st_) {
+			return static_cast<DWORD>(std::strlen(st_));
+		}
+#else
+		template<size_t N>
+		DBJINLINE DWORD len2dword(const wchar_t (&ws_)[N]) {
+			return static_cast<DWORD>(N);
+		}
+
+		template<size_t N>
+		DBJINLINE DWORD len2dword(const char (&st_)[N]) {
+			return static_cast<DWORD>(N);
+		}
+		DBJINLINE DWORD len2dword(const std::wstring & ws ) {
+			return static_cast<DWORD>(ws.size());
+		}
+
+		DBJINLINE DWORD len2dword(const std::string & ws) {
+			return static_cast<DWORD>(ws.size());
+		}
+#endif
+
+		template <typename C>
+		DBJINLINE auto chr2str(const std::char_traits<C> & c_) {
+			static C str[2] = { C(), C() };
+			str[0] = c_;
+			return str;
+		};
 
 	} // eof namespace str
 
@@ -204,27 +345,12 @@ namespace dbj {
 	*/
 	class exception
 	{
-		std::wstring dbj_exception_data_;
-	public:
+		mutable std::wstring dbj_exception_data_{ L"Unknown Exception" };
 
-		exception() throw()
-			: dbj_exception_data_()
-		{
-		}
-
-		explicit exception(wchar_t const* const _Message) throw()
-			: dbj_exception_data_(_Message)
-		{
-		}
-
+		exception();
 		/* copy from std::exception */
 		exception(const std::exception & ws) throw() {
 			dbj_exception_data_ = str::to_wide(ws.what());
-		}
-
-		exception(const std::wstring & _Message ) throw()
-			: dbj_exception_data_(_Message)
-		{
 		}
 
 		exception(exception const& _Other) throw()
@@ -237,9 +363,21 @@ namespace dbj {
 		{
 			if (this == &_Other) return *this;
 
-			dbj_exception_data_.clear() ;
+			dbj_exception_data_.clear();
 			dbj_exception_data_ = _Other.dbj_exception_data_;
 			return *this;
+		}
+
+	public:
+
+		explicit exception(wchar_t const* const _Message) throw()
+			: dbj_exception_data_(_Message)
+		{
+		}
+
+		exception(const std::wstring & _Message ) throw()
+			: dbj_exception_data_(_Message)
+		{
 		}
 
 		virtual ~exception() throw()
@@ -249,7 +387,7 @@ namespace dbj {
 
 		virtual wchar_t const* what() const
 		{
-			return dbj_exception_data_.data() ? dbj_exception_data_.data() : L"Unknown exception";
+			return (!dbj_exception_data_.empty() ? dbj_exception_data_.data() : L"Unknown exception");
 		}
 	};
 
@@ -323,7 +461,8 @@ extern "C" DBJINLINE const wchar_t * const dbj_simple_system_dir() {
 #pragma endregion dbj_simple
 
 namespace dbj {
-#pragma region single counter
+#if 0
+#pragma region GLOBAL_BEGIN_END
 	typedef void(*voidvoidfun) ();
 	template< voidvoidfun ATSTART, voidvoidfun ATEND>
 	struct __declspec(novtable)
@@ -358,26 +497,81 @@ namespace dbj {
 	void f2 () { printf("End   once!"); } ;
 	static GLOBAL_BEGIN_END<f1,f2> the_counter__;
 	*/
-#pragma endregion single counter
-
-	/* string length size_t to DWORD to pacify the MSVC */
-	DBJINLINE DWORD len2dword ( const wchar_t * ws_) {
-		return static_cast<DWORD>(std::wcslen(ws_));
-	}
-
-	DBJINLINE DWORD len2dword(const char * st_) {
-		return static_cast<DWORD>(std::strlen(st_));
-	}
-
-	DBJINLINE auto chr2str(const char & c_) {
-		static char str[2] = {0x00, 0x00};
-		str[0] = c_;
-		return str;
-	};
+#pragma endregion GLOBAL_BEGIN_END
+#endif
+	
 
 
 	namespace win {
 		namespace console {
+			
+			template<typename T>
+			struct tpe { const char * name = typeid(T).name;  };
+
+			/* overloaded output functions for various types */
+			namespace {
+				
+				/* the default op */
+				inline void out (const HANDLE & output_handle_, const std::wstring & wp_) {
+					DBJ_VERIFY(0 != ::WriteConsoleW(output_handle_, wp_.data(),
+						static_cast<DWORD>(wp_.size()),
+						NULL, NULL));
+				}
+#if 0
+				/* base template */
+				template<typename T>
+				inline void out(HANDLE output_handle_, const T & arg_) {
+					out(output_handle_, arg_);
+				}
+
+				inline void out (const HANDLE & output_handle_,  const float & number_) {
+					// static_assert( std::is_arithmetic<N>::value, "type N is not a number");
+					out(output_handle_, std::to_wstring(number_));
+				}
+
+				inline void out (const HANDLE & output_handle_,  const int & number_) {
+					// static_assert( std::is_arithmetic<N>::value, "type N is not a number");
+					out(output_handle_, std::to_wstring(number_));
+				}
+
+				inline void out (const HANDLE & output_handle_,  const double & number_) {
+					// static_assert( std::is_arithmetic<N>::value, "type N is not a number");
+					out(output_handle_, std::to_wstring(number_));
+				}
+#endif
+				template<typename N, typename = std::enable_if_t<std::is_arithmetic<N>::value > >
+				inline void out(const HANDLE & output_handle_, const N & number_) {
+					// static_assert( std::is_arithmetic<N>::value, "type N is not a number");
+					out(output_handle_, std::to_wstring(number_));
+				}
+
+
+				inline void out (const HANDLE & output_handle_,  const char * cp)  {
+					std::string s(cp);
+					out(output_handle_, std::wstring(s.begin(), s.end()));
+				}
+
+				inline void out (const HANDLE & output_handle_,  const wchar_t * cp)  {
+					out(output_handle_, std::wstring(cp));
+				}
+
+				template<size_t N>
+				inline void out (const HANDLE & output_handle_,  const wchar_t(&wp_)[N]) {
+					out(output_handle_, std::wstring(wp_));
+				}
+
+				inline void out (const HANDLE & output_handle_,  const wchar_t wp_) {
+					wchar_t str[] = { wp_, L'\0' };
+					out(output_handle_, str);
+				}
+
+				inline void out (const HANDLE & output_handle_,  const char wp_) {
+					char str[] = { wp_, '\0' };
+					out(output_handle_, std::wstring( std::begin(str), std::end(str)) );
+				}
+
+			} // /* overloaded output functions for various types */
+
 /*
 Not FILE * but HANDLE based output.
 It also uses Windows.1252 Code Page.
@@ -388,7 +582,7 @@ https://msdn.microsoft.com/en-us/library/windows/desktop/dd374122(v=vs.85).aspx
 Even if you get your program to write UTF16 correctly to the console, 
 Note that the Windows console isn't UTF16 friendly and may just show garbage.
 */
-struct __declspec(novtable)	WideOut
+struct __declspec(novtable)	WideOut final
 	{
 	HANDLE output_handle_;
 	UINT   previous_code_page_;
@@ -409,63 +603,13 @@ struct __declspec(novtable)	WideOut
 			/*			TODO: GetLastError()  		*/
 		}
 
-		template<typename N>
-		void operator () (const N & number_) {
-					// static_assert( std::is_arithmetic<N>::value);
-			std::wstring sn_ = std::to_wstring(number_);
-			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, sn_.data(), len2dword(sn_.data()), NULL, NULL));
-		}
-
-		void operator () (const wchar_t * const wp_) {
-// last 2 args: no of chars, to in write (DWORD) and in-out written (LPDWORD)
-#if _DEBUG
-			DWORD to_write = len2dword(wp_);
-			DWORD written;
-			WriteConsoleW(this->output_handle_, wp_, to_write, &written, NULL);
-
-			DBJ_VERIFY(to_write == written);
-#else
-			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, wp_, len2dword(wp_), NULL, NULL));
-#endif
-		}
-
-		void operator () (const std::wstring & wp_) {
-#if _DEBUG
-			DWORD to_write = len2dword(wp_.data());
-			DWORD written;
-			WriteConsoleW(this->output_handle_, wp_.data(), to_write, &written, NULL);
-
-			DBJ_VERIFY(to_write == written);
-#else
-			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, wp_.data(), len2dword(wp_.data()), NULL, NULL));
-#endif		
-		}
-
-		void operator () (const wchar_t & wp_) {
-			wchar_t str[] = { wp_, L'\0' };
-			DBJ_VERIFY(0 != ::WriteConsoleW(this->output_handle_, str, len2dword(str), NULL, NULL));
-		}
-
-		void operator () (const char & wp_) {
-			char str[] = { wp_, '\0' };
-			DBJ_VERIFY(0 != ::WriteConsoleA(this->output_handle_, str, len2dword(str), NULL, NULL));
-		}
-
-		void operator () (const char * const wp_) {
-			DBJ_VERIFY(0 != ::WriteConsoleA(this->output_handle_, wp_, len2dword(wp_), NULL, NULL));
-		}
-
-		void operator () (const std::string & wp_) {
-			DBJ_VERIFY(0 != ::WriteConsoleA(this->output_handle_, wp_.data(),
-				(DWORD)wp_.size(),
-				NULL, NULL));
-		}
 		/*
 		http://en.cppreference.com/w/cpp/language/parameter_pack
 		*/
-		void print(const char * format) // base function
+		template<typename T>
+		const void print(const T & arg) const // base function
 		{
-			(*this)(format);
+			out( output_handle_, arg);
 		}
 		/*
 			Primitive print(). Tries to handle "words" and "numbers".
@@ -478,11 +622,11 @@ struct __declspec(novtable)	WideOut
 		{
 			for (; *format != '\0'; format++) {
 				if (*format == '%') {
-					this->operator()(value);
+					out(output_handle_, value);
 					print(format + 1, Fargs...); // recursive call
 					return;
 				}
-				this->operator()( *format ); // this calls with 'const char'
+				out(output_handle_, *format ); // this calls with 'const char'
 			}
         }
 

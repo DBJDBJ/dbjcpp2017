@@ -24,7 +24,7 @@
 //
 // To contact the author with suggestions or comments, use csells@sellsbrothers.com.
 /////////////////////////////////////////////////////////////////////////////
-// CComBool is a class to prevent the misuse of the VARIANT_BOOL type.
+// com_bool is a class to prevent the misuse of the VARIANT_BOOL type.
 // VARIANT_BOOL is a problem because its legal values are -1 and 0 instead of
 // 1 and 0, making converting back and forth between bool, BOOL and
 // VARIANT_BOOL problematic.
@@ -44,7 +44,7 @@ extern HRESULT IEvenChecker::IsEven([in] long n, [out, retval] VARIANT_BOOL* pvb
 
 HRESULT IsEven(IEvenChecker* pec, VARIANT_BOOL* pvb)
 {
-    CComBool    b;  // Supports ctors for all bool types
+    com_bool    b;  // Supports ctors for all bool types
     DBJ_VERIFY(!b);   // Starts as false, supports operator! and operator bool
 
     pec->IsEven(2, &b); // Supports operator&
@@ -60,26 +60,25 @@ HRESULT IsEven(IEvenChecker* pec, VARIANT_BOOL* pvb)
 */
 
 #pragma once
-#ifndef INC_COMBOOL
-#define INC_COMBOOL
+
 
 namespace dbjsys {
 	namespace fm {
 //--------------------------------------------------------------------------------------------
 
 // 
-class CComBool
+class com_bool
 {
 public:
 	// 
-    CComBool(bool b = false)        : m_vb(VariantBool(b))    {}
-    CComBool(VARIANT_BOOL vb)       : m_vb(vb)                { Assert(vb); }
+    com_bool(bool b = false)        : m_vb(VariantBool(b))    {}
+    com_bool(VARIANT_BOOL vb)       : m_vb(vb)                { Assert(vb); }
 	// 
-    CComBool(BOOL b)                : m_vb(VariantBool(b))    {}
+    com_bool(BOOL b)                : m_vb(VariantBool(b))    {}
 	// 
-    CComBool(const CComBool& rhs)   : m_vb(rhs.m_vb)          {}
+    com_bool(const com_bool& rhs)   : m_vb(rhs.m_vb)          {}
 	// 
-    CComBool(const VARIANT& var)    : m_vb(VariantBool(var))  {}
+    com_bool(const VARIANT& var)    : m_vb(VariantBool(var))  {}
 
 	// 
     operator bool() const   { return m_vb != VARIANT_FALSE; }
@@ -97,15 +96,15 @@ public:
     operator VARIANT() const    { VARIANT var = { VT_BOOL }; var.boolVal = m_vb; return var; }
 
 	// 
-    CComBool& operator=(bool b)                 { m_vb = VariantBool(b); return *this; }
+    com_bool& operator=(bool b)                 { m_vb = VariantBool(b); return *this; }
 	// 
-    CComBool& operator=(VARIANT_BOOL vb)        { Assert(vb); m_vb = vb; return *this; }
+    com_bool& operator=(VARIANT_BOOL vb)        { Assert(vb); m_vb = vb; return *this; }
 	// 
-    CComBool& operator=(BOOL b)                 { m_vb = VariantBool(b); return *this; }
+    com_bool& operator=(BOOL b)                 { m_vb = VariantBool(b); return *this; }
 	// 
-    CComBool& operator=(const CComBool& rhs)    { m_vb = rhs.m_vb; return *this; }
+    com_bool& operator=(const com_bool& rhs)    { m_vb = rhs.m_vb; return *this; }
 	// 
-    CComBool& operator=(const VARIANT& var)     { m_vb = VariantBool(var); return *this; }
+    com_bool& operator=(const VARIANT& var)     { m_vb = VariantBool(var); return *this; }
 
 	// 
     bool operator==(bool b) const               { return VariantBool(b) == m_vb; }
@@ -114,7 +113,7 @@ public:
 	// 
     bool operator==(BOOL b) const               { return VariantBool(b) == m_vb; }
 	// 
-    bool operator==(const CComBool& rhs) const  { return rhs.m_vb == m_vb; }
+    bool operator==(const com_bool& rhs) const  { return rhs.m_vb == m_vb; }
 	// 
     bool operator==(const VARIANT& var) const   { return VariantBool(var) == m_vb; }
 
@@ -125,14 +124,14 @@ public:
 	// 
     bool operator!=(BOOL b) const               { return VariantBool(b) != m_vb; }
 	// 
-    bool operator!=(const CComBool& rhs) const  { return rhs.m_vb != m_vb; }
+    bool operator!=(const com_bool& rhs) const  { return rhs.m_vb != m_vb; }
 	// 
     bool operator!=(const VARIANT& var) const   { return VariantBool(var) != m_vb; }
 
 	// 
-    bool operator||(const CComBool &rhs) const  { return static_cast<bool>(*this) || static_cast<bool>(rhs); }
+    bool operator||(const com_bool &rhs) const  { return static_cast<bool>(*this) || static_cast<bool>(rhs); }
 	// 
-    bool operator&&(const CComBool &rhs) const  { return static_cast<bool>(*this) && static_cast<bool>(rhs); }
+    bool operator&&(const com_bool &rhs) const  { return static_cast<bool>(*this) && static_cast<bool>(rhs); }
     
 	// 
     HRESULT CopyTo(VARIANT_BOOL* pvb) const
@@ -152,15 +151,12 @@ public:
     }
 
     static
-	// 
     VARIANT_BOOL VariantBool(bool b) { return b ? VARIANT_TRUE : VARIANT_FALSE; }
 
     static
-	// 
     VARIANT_BOOL VariantBool(BOOL b) { return b ? VARIANT_TRUE : VARIANT_FALSE; }
 
     static
-	// 
     VARIANT_BOOL VariantBool(VARIANT var)
     {
         if( SUCCEEDED(::VariantChangeType(&var, &var, 0, VT_BOOL)) ) return var.boolVal;
@@ -168,11 +164,9 @@ public:
     }
 
     static
-	// 
     void Assert(VARIANT_BOOL vb) { DBJ_VERIFY((vb == VARIANT_TRUE) || (vb == VARIANT_FALSE)); }
 
 private:
-	// 
     VARIANT_BOOL    m_vb;
 };
 
@@ -181,5 +175,5 @@ private:
 } // namespace dbjsys 
 //--------------------------------------------------------------------------------------------
 
-#endif  // INC_COMBOOL
+
 

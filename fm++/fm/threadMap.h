@@ -69,7 +69,7 @@ class thread_map
 			T * firstItem () const
 			{
                 LOCK lock( cs_ ) ;
-                MAP::const_iterator iter_ = threadMap_.begin() ;
+                auto iter_ = threadMap_.begin() ;
                 if ( iter_ != threadMap_.end() )
 				{
 					is_thread_still_active( iter_->first ) ;
@@ -85,7 +85,7 @@ class thread_map
 				
 				is_thread_still_active( threadID_ ) ;
 
-                MAP::const_iterator iter_ = threadMap_.find( threadID_ ) ;
+                auto iter_ = threadMap_.find( threadID_ ) ;
                 if ( iter_ != threadMap_.end() )
                     return iter_->second ;
                 return 0 ;   
@@ -95,7 +95,7 @@ class thread_map
             {
                 LOCK lock( cs_ ) ;
                 DWORD threadID_ = GetCurrentThreadId() ;
-                    MAP::const_iterator iter_ = threadMap_.find( threadID_ ) ;
+                    auto iter_ = threadMap_.find( threadID_ ) ;
                     if ( iter_ != threadMap_.end() )
                         return ; // already here for this thread
                 // thread id is the key, address of the item is the map item
@@ -132,6 +132,7 @@ private:
                 threadMap_.erase( threadMap_.begin(), threadMap_.end() ) ;
             }
 
+			/* copying not allowed */
     thread_map ( const thread_map & ) ;
     thread_map & operator = ( const thread_map & ) ;
 

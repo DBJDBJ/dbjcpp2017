@@ -2,7 +2,15 @@
 /* 
 Copyright 2017 dbj@dbj.org
 
+"modern" printf like output in modern c++, without printf type descriptors required.
+side effect is std::cout is not used so small memory footprint should be achieved.
+unicode is required.
+c++14 capable compiler should suffice.
+
 Inspired with: https://msdn.microsoft.com/magazine/dn973010
+Which in turn was inspired with http://en.cppreference.com/w/cpp/language/parameter_pack
+
+Kenys idea was to implement it but without std::  iostreams
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +32,11 @@ limitations under the License.
 #include <guiddef.h>
 #include <Unknwnbase.h>
 
+#if ! defined ( DBJ_VERIFY )
+#include <assert.h>
+#define DBJ_VERIFY assert
+#endif
+
 #ifndef UNICODE
 #error DBJ modernprint requires UNICODE builds
 #error Also make sure not to use char, printf() or any other CRT ANSI function anywhere ...
@@ -33,8 +46,47 @@ limitations under the License.
 #define DBJ_PRINT_TEST 1
 #ifndef DBJINLINE
 #define DBJINLINE static __forceinline
+/* not to eggheads: yes I know inline is C++ keyword */
 #endif
 
+#ifndef find_first_of
+namespace dbj {
+
+	/*
+	DBJ created 2017-04-13
+	DBJ: "I do not know for sure if this is my invention"
+
+	s1 and s2 are "any" ranges as defined in C++ standard
+	find first s2 in s1
+	return the position relative to the s1 begining
+	return -1 if s2 not found in s1
+
+	NOTE1: move semantics implementation not advised here
+	<ode>template< typename S1, typename S2>	auto find_first_of( S1 && s1, S2 && s2) ;</code>
+	Because in that case s1 and s2 are "Universal" references which always would require
+	std::forward<S1>(s1) and std::forward<S2>(s2)
+	which implies copying or moving. And we do not need any of them in here. Just iteration.
+
+	NOTE2: I could have applied assert_static() here in order to provide meaningfull error messages
+	if users do pass s1 or s2 which are not the ranges. But, I have decided not to. So in particular be
+	wary of trying to pass pointers to string literals; they are not C++ ranges:
+
+	const wchar_t * format = L"abra % ka % dabra" ;
+	const wchar_t * placeholder = L"%" ;
+
+	auto dbj = dbj::find_first_of( format, placeholder );
+	*/
+	template< typename S1, typename S2>
+	DBJINLINE auto find_first_of(const S1 & s1, const S2 & s2) {
+		auto pos_ = std::find_first_of(
+			std::begin(s1), std::end(s1),
+			std::begin(s2), std::end(s2)
+		);
+
+		return (pos_ == std::end(s1) ? -1 : std::distance(std::begin(s1), pos_));
+	}
+}
+#endif
 
 namespace dbj {
 
@@ -426,10 +478,8 @@ namespace dbj {
 	} // print
 } // dbj
 #define DBJVERSION __DATE__ __TIME__
-#pragma message("")
-#pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
-#pragma message("")
-#pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION ) 
+#pragma message( "============> Compiled" __FILE__ ", Version: " DBJVERSION)
+#pragma comment( user, "(c) 2017 by dbj@dbj.org | Version: " DBJVERSION ) 
 #undef DBJVERSION
 
 

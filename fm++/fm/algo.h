@@ -26,6 +26,7 @@
 #include "glob.h"
 #include "timestamp.h"
 #include <optional>
+#include <cctype>
 
 /*
 
@@ -77,14 +78,8 @@ DBJINLINE constexpr bool issign ( const wchar_t & c ) noexcept
 {
 	return (c == L'+') || (c == L'-') ? true : false;
 }
-//--------------------------------------------------------------------------------
+#pragma region STRING UTILS
 // case insensitive string compare
-//
-// this would work only for ANSI code
-//
-/*
-reimplement using _bstr_t only?
-*/
 class NocaseStrEqual {
 public:
 	//strcmp
@@ -148,30 +143,52 @@ bool compareNoCase( const T & s1, const T & s2 )
     return NocaseStrEqual()(s1,s2) ;
 }
 //----------------------------------------------------------------------------
-//
-//
-DBJINLINE
-void stringtrim(std::wstring & s_ )
+// no copy result version
+template< typename RANGE>
+DBJINLINE void reverse_copy(RANGE & reversed_copy , const RANGE & original ) 
 {
-	static const wchar_t SPACE_CHAR = L' ' ;
-		if(s_.length() < 1 ) return ;
-	std::wstring	result ;
-	size_t		nonSpacePos = s_.find_first_not_of( SPACE_CHAR,0 ) ;
-
-	if ( nonSpacePos != npos ) // found leading spaces
-	{
-		result = s_.substr( nonSpacePos ) ;
-		s_ = result ;  // change the string sent
-	}
-
-	nonSpacePos = s_.find_last_not_of( SPACE_CHAR ) ;
-
-	if ( nonSpacePos != npos ) // found trailing spaces
-	{
-		result = s_.substr( 0, nonSpacePos+1 ) ;
-		s_ = result ;  // change the string sent
-	}
+	using namespace std;
+	reverse_copy(begin(original), end(original), begin(reversed_copy));
 }
+// result copy, version
+template< typename RANGE>
+DBJINLINE RANGE reverse_copy( const RANGE & original)
+{
+	using namespace std;
+	RANGE reversed_copy;
+	reverse_copy(reversed_copy, original);
+	return reversed_copy;
+}
+//----------------------------------------------------------------------------
+/*
+http://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+*/
+DBJINLINE std::string trim(const std::string &s)
+{
+	using namespace std;
+
+	auto  wsfront = find_if_not(s.begin(), s.end(), [](int c) {return isspace(c); });
+	return string(
+		wsfront, 
+		find_if_not(s.rbegin(), 
+			string::const_reverse_iterator(wsfront), [](int c) {return isspace(c); }
+		).base()
+	);
+}
+
+DBJINLINE std::wstring trim(const std::wstring &s)
+{
+	using namespace std;
+
+	auto  wsfront = find_if_not(s.begin(), s.end(), [](int c) {return iswspace(c); });
+	return wstring(
+		wsfront,
+		find_if_not(s.rbegin(),
+			wstring::const_reverse_iterator(wsfront), [](int c) {return iswspace(c); }
+		).base()
+	);
+}
+#pragma endregion STRING UTILS
 //--------------------------------------------------------------
 /*
 TODO 
@@ -693,9 +710,9 @@ DBJINLINE bool cut_down_to_size(int logfile_handle_)
 //
 // 040415   DBJ				Definite legacy function ... serious reqork needed
 //
-DBJINLINE void switchErrLog(const _bstr_t & name, const int appendLog)
+DBJINLINE void switchErrLog(const wchar_t * name, const int appendLog)
 {
-	_bstr_t  fullpath = algo::makeLogFileName(name.length() > 1 ? name : glob::DFLT_LOG_FILE() );
+	auto fullpath = algo::makeLogFileName( lstrlen( name ) > 1 ? name : glob::DFLT_LOG_FILE() );
 
 	FILE * errLog = 0;
 	errno_t error_num = 0;
@@ -730,7 +747,7 @@ DBJINLINE void switchErrLog(const _bstr_t & name, const int appendLog)
 	}
 	prompt(L"-", 79);
 
-   Timestamp;
+   const Timestamp & dummy_ = Timestamp() ;
 
 	prompt(L"LOG START", 0, 0) << L", Module : " << algo::this_module_full_path()
 		<< L", " << algo::current_time << std::endl;

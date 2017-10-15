@@ -33,9 +33,9 @@ ReportEvent					Writes an entry at the end of the specified event log.
 namespace dbjsys {
 	namespace fm {
 
-		static _bstr_t bstr_file = __FILE__;
-		static const wchar_t* EVENTLOG_REG_LOCATION = L"SYSTEM\\CurrentControlSet\\Services\\EventLog";
-		static const wchar_t* EVENTLOG_FILEPATH = L"%SystemRoot%\\system32\\config";
+		static auto   bstr_file = __FILE__;
+		static auto * EVENTLOG_REG_LOCATION = L"SYSTEM\\CurrentControlSet\\Services\\EventLog";
+		static auto * EVENTLOG_FILEPATH = L"%SystemRoot%\\system32\\config";
 
 // interface to objectified WIN32 API for event logging -----------
 template<class T> class IEvLog {
@@ -202,7 +202,7 @@ public:
 		//    return true ;
 
 
-		RegKey hk;
+		RegKey & hk = RegKey();
 
 
 		// Add your source name as a subkey under the EventLog 
@@ -323,7 +323,7 @@ public:
 		if (doesEventLogExist(details.eventLogName))
 			return true; // need to tell user !!!
 
-		RegKey hk;
+		RegKey & hk = RegKey();
 
 		// Add your source name as a subkey under the EventLog 
 		// key in the EventLog service portion of the registry. 
@@ -454,7 +454,7 @@ public:
 		fullName += dbjsys::glob::backSlash();
 		fullName += name;
 
-		RegKey hk;
+		RegKey & hk = RegKey();
 		DWORD m_lErr = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, fullName, 0, KEY_READ, &hk);
 
 		return m_lErr == ERROR_SUCCESS;
@@ -468,7 +468,7 @@ public:
 		fullName += dbjsys::glob::backSlash();
 		fullName += sourcename;
 
-		RegKey hk;
+		RegKey & hk = RegKey();
 		DWORD m_lErr = ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, fullName, 0, KEY_READ, &hk);
 
 		return m_lErr == ERROR_SUCCESS;
@@ -486,9 +486,10 @@ public:
 // 
 class RegKey
 {
+	RegKey & operator = (RegKey & right); // {};
 public:
 	// 
-	RegKey() : hk_(0) {}
+ 	RegKey() : hk_(0) {}
 	// 
 	~RegKey()
 	{
@@ -496,29 +497,19 @@ public:
 			::RegCloseKey(hk_);
 		hk_ = 0;
 	}
-	// 
-	HKEY * operator &()
-	{
-		return &hk_;
+	//
+	friend void swap(RegKey & r1, RegKey & r2) {
+		auto ht = r1.hk_;
+		r1.hk_ = r2.hk_;
+		r2.hk_ = ht;
 	}
 	// 
-	operator const HKEY & () const
-	{
-		return hk_;
-	}
+	HKEY * operator &() const noexcept	{		return const_cast<HKEY*>( &hk_ );	}
 	// 
-	operator HKEY & ()
-	{
-		return hk_;
-	}
+	operator const HKEY & () const noexcept	{		return hk_;	}
+	// 
+	// operator HKEY & () noexcept	{		return hk_; 	}
 private:
-	// no copy or assginment allowed
-	// 
-	RegKey(const RegKey &);
-	// 
-	RegKey & operator=(const RegKey &);
-
-
 	// 
 	HKEY hk_;
 };
@@ -743,7 +734,7 @@ template<class T> class LoggingFile
 			{
 				log_writer_->report(event);
 			}
-			catch (Writer::Err & e)
+			catch (const Writer::Err & e)
 			{
 				throw e.what();
 			}

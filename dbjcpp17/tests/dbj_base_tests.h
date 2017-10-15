@@ -33,6 +33,8 @@ namespace {
 	using std::wstring;
 	using std::wcout;
 
+	using dbj::str::len2dword;
+
 		TEST(dbj_basic_tests, the_std_way)
 		{
 			static const wchar_t* str = L"爆ぜろリアル！弾けろシナプス！パニッシュメントディス、ワールド！";
@@ -71,17 +73,19 @@ namespace {
 		*/
 		TEST(dbj_basic_tests, basic_idea_test) 
 		{
-			auto writeAnsiChars = [] (HANDLE outhand_, char * ansi__ = 0)
+			auto writeAnsiChars = [] (HANDLE outhand_, const char * ansi__ = 0)
 			{
-				char *ansi_pound = "\nANSI: \xA3\r\n"; //A3 == pound character in Windows-1252
-				ansi_pound = ansi__ ? ansi__ : ansi_pound;
-				WriteConsoleA(outhand_, ansi_pound, len2dword(ansi_pound), NULL, NULL);
+				static const char ansi_pound[] = { "\nANSI: \xA3\r\n" }; //A3 == pound character in Windows-1252
+				::WriteConsoleA(outhand_, 
+					(ansi__ ? ansi__ : ansi_pound), 
+					(DWORD)std::strlen((ansi__ ? ansi__ : ansi_pound)), 
+					NULL, NULL);
 			};
 
 			auto writeUnicodeChars = [] (HANDLE outhand_, const wchar_t * widestr__ = 0)
 			{
 				if (widestr__) {
-					WriteConsoleW(outhand_, widestr__, len2dword(widestr__), NULL, NULL);
+					::WriteConsoleW(outhand_, widestr__, (DWORD)std::wcslen(widestr__), NULL, NULL);
 					return;
 				}
 				wchar_t *arr[] =
@@ -95,7 +99,7 @@ namespace {
 
 				for (int i = 0; arr[i] != 0; i++)
 				{
-					WriteConsoleW(outhand_, arr[i], len2dword(arr[i]), NULL, NULL);
+					::WriteConsoleW(outhand_, arr[i], (DWORD)std::wcslen(arr[i]), NULL, NULL);
 				}
 			};
 			const static wstring doubles = L"\nUnicode: ║═╚";
