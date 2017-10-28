@@ -20,7 +20,7 @@ limitations under the License.
 
 #if 1
 #define DBJVERSION __DATE__ __TIME__
-#pragma message( "Compiling: " __FILE__ ", Version: " DBJVERSION)
-#pragma comment( user, "(c) 2017 by dbj@dbj.org code, Version: " DBJVERSION )
+#pragma message( "-----------------> Compiled: " __FILE__ ", Version: " DBJVERSION)
+#pragma comment( user, "(c) " __DATE__ " by dbj@dbj.org code, Version: " DBJVERSION )
 #undef DBJVERSION
 #endif
