@@ -20,7 +20,7 @@
 #pragma once
 #include <functional>
 #ifndef DBJINLINE
-#define DBJINLINE static __forceinline
+#define DBJINLINE __forceinline
 #endif
 
 

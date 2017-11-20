@@ -11,7 +11,7 @@ https://support.microsoft.com/en-us/kb/286340
 #include <functional>
 #include <vector>
 
-#define DBJINLINE static __forceinline
+#define DBJINLINE __forceinline
 
 /*
 ----------------------------------------------------

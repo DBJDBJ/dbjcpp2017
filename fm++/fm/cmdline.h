@@ -14,6 +14,9 @@
 //*****************************************************************************/
 #pragma once
 #include "fm.h"
+#ifndef string_type
+typedef std::string string_type;
+#endif
 #if 0
 /*
 std::vector based implementation
@@ -28,7 +31,7 @@ vector<string> args(argv + 1, argv + argc);
 namespace dbjsys { namespace fm  {
 //--------------------------------------------------------------------------------------
 	/* Command Line Interface */
-	class CLI {
+	class CLI final {
 	public:
 #ifdef _UNICODE
 		typedef typename std::wstring string;
@@ -190,7 +193,7 @@ namespace dbjsys { namespace fm  {
 		}
 
 	}; // eof CLI 
-#if 0
+#if 1
 	// use this as an universal cli argument that returns strings or wstrings 
 	DBJINLINE 
 		const CLI::value_type clargument(
@@ -216,7 +219,7 @@ namespace dbjsys { namespace fm  {
 //--------------------------------------------------------------------------------------
 } // namespace fm 
 } // namespace dbj 
-#if 0
+#if 1
 /*
 Implementaion from cpp moved bellow
  */
@@ -304,7 +307,7 @@ namespace dbjsys {
 					if ((!prefix) && (!*prefix))
 						return result_; // anti jokers measure
 
-					register int j = 0;
+					int j = 0;
 
 					const value_type * candidate_ = NULL;
 
@@ -346,7 +349,7 @@ namespace dbjsys {
 					if ((!prefix) && (!*prefix))
 						return result_; // anti jokers measure
 
-					register int j = 0;
+					int j = 0;
 
 					while (NULL != (result_ = operator [] (j++)))
 					{
@@ -398,7 +401,7 @@ namespace dbjsys {
 } // namespace dbj 
 #endif
 
-#if 0
+#if 1
 namespace dbjsys {
 	namespace fm {
 
@@ -470,32 +473,26 @@ namespace dbjsys {
 		template<typename T> class cl_argument
 		{
 			// 
-			T defval_; // default value
-			T reqval_; // requested value
-					   // no default c-tor allowed
+			T defval_{}; // default value
+			T reqval_{}; // requested value
+			// no default c-tor allowed
 			cl_argument() {}
 		public:
 			// hide the following typedef  do not make it "library wide"
-#if defined( _UNICODE )
-			typedef wchar_t value_type;
-			typedef _bstr_t string_type;
-#else
-			//		#warning DBJ*FM++ __FILE__ has to be compiled as UNICODE 
-			typedef wchar_t value_type;
-			typedef _bstr_t string_type;
-#endif
+			typedef char			value_type;
+			typedef std::string		string_type;
 
 			// type of the cli value for the cli tag given
-			typedef T Type;
+			// typedef T Type;
 			// type of the string abstraction used
-			typedef string_type String_type;
+			// typedef string_type String_type;
 			// copy constructor must receive a default value for the cli arguments
 			explicit
 				cl_argument(const T & defval) : defval_(defval), reqval_(defval)
 			{
 			}
 
-			const operator [] (const unsigned int & index) const
+			const string_type & operator [] (const unsigned int & index) const
 			{
 				return string_type(cline_[index]);
 			}
@@ -537,8 +534,8 @@ namespace dbjsys {
 		//----------------------------------------------------------------------------------------------
 		// common CLI arg types are just these two
 
-		typedef dbjsys::fm::cl_argument<string_type>   cli_argument_string;
-		typedef dbjsys::fm::cl_argument<long>          cli_argument_long;
+		typedef typename dbjsys::fm::cl_argument<std::string>   cli_argument_string;
+		typedef typename dbjsys::fm::cl_argument<long>          cli_argument_long;
 
 		//----------------------------------------------------------------------------------------------
 		// use this as an universal cli method that enforces slightly different semantics from above
@@ -550,6 +547,7 @@ namespace dbjsys {
 		return cliarg_(cl_tag);
 		}
 		*/
+#if 0
 		// for string_type 
 		inline const string_type cli_argument_(const wchar_t  * const cl_tag, const string_type & def_val)
 		{
@@ -568,13 +566,14 @@ namespace dbjsys {
 			cli_argument_string cliarg_(L"");
 			return cliarg_[idx_];
 		}
+#endif
 		namespace test {
 			//--------------------------------------------------------------------------------------
 			// usage example
-			inline long saberi(long a, long b)
-			{
+			auto saberi = [] (auto a, auto b) {
 				return a + b;
-			}
+			};
+
 			inline const void test_CmdLineArguments()
 			{
 				cl_argument<long>     no_of_elements(512);

@@ -46,7 +46,7 @@ limitations under the License.
 #error UNICODE is mandatory for __FILE__ to compile
 #endif
 
-#define DBJINLINE static __forceinline 
+#define DBJINLINE __forceinline 
 
 // Taken from MODERN v1.26 - http://moderncpp.com
 // Copyright (c) 2015 Kenny Kerr
