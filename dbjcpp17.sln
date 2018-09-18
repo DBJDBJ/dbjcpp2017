@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "graf_demo", "..\graf\examples\demo\tigrdemo.vcxproj", "{57703B8C-3602-4F64-8A15-8B317456F920}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "graf_hello", "..\graf\examples\hello\hello.vcxproj", "{9D735CFA-4217-4A99-B688-DD07F86859B3}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fm++", "fm++\fm++.vcxproj", "{D4323F74-94C8-47AC-9E27-86AD434C6016}"
 EndProject
 Global
@@ -17,22 +13,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{57703B8C-3602-4F64-8A15-8B317456F920}.Debug|x64.ActiveCfg = Debug|x64
-		{57703B8C-3602-4F64-8A15-8B317456F920}.Debug|x64.Build.0 = Debug|x64
-		{57703B8C-3602-4F64-8A15-8B317456F920}.Debug|x86.ActiveCfg = Debug|Win32
-		{57703B8C-3602-4F64-8A15-8B317456F920}.Debug|x86.Build.0 = Debug|Win32
-		{57703B8C-3602-4F64-8A15-8B317456F920}.Release|x64.ActiveCfg = Release|x64
-		{57703B8C-3602-4F64-8A15-8B317456F920}.Release|x64.Build.0 = Release|x64
-		{57703B8C-3602-4F64-8A15-8B317456F920}.Release|x86.ActiveCfg = Release|Win32
-		{57703B8C-3602-4F64-8A15-8B317456F920}.Release|x86.Build.0 = Release|Win32
-		{9D735CFA-4217-4A99-B688-DD07F86859B3}.Debug|x64.ActiveCfg = Debug|x64
-		{9D735CFA-4217-4A99-B688-DD07F86859B3}.Debug|x64.Build.0 = Debug|x64
-		{9D735CFA-4217-4A99-B688-DD07F86859B3}.Debug|x86.ActiveCfg = Debug|Win32
-		{9D735CFA-4217-4A99-B688-DD07F86859B3}.Debug|x86.Build.0 = Debug|Win32
-		{9D735CFA-4217-4A99-B688-DD07F86859B3}.Release|x64.ActiveCfg = Release|x64
-		{9D735CFA-4217-4A99-B688-DD07F86859B3}.Release|x64.Build.0 = Release|x64
-		{9D735CFA-4217-4A99-B688-DD07F86859B3}.Release|x86.ActiveCfg = Release|Win32
-		{9D735CFA-4217-4A99-B688-DD07F86859B3}.Release|x86.Build.0 = Release|Win32
 		{D4323F74-94C8-47AC-9E27-86AD434C6016}.Debug|x64.ActiveCfg = Debug|x64
 		{D4323F74-94C8-47AC-9E27-86AD434C6016}.Debug|x64.Build.0 = Debug|x64
 		{D4323F74-94C8-47AC-9E27-86AD434C6016}.Debug|x86.ActiveCfg = Debug|Win32
