@@ -35,7 +35,8 @@ limitations under the License.
 #include <cstdio>
 #include <string>
 #include <iostream>
-#include <strstream>
+//#include <strstream>
+#include <sstream>
 #include <clocale>
 #include <locale>
 #include <codecvt>

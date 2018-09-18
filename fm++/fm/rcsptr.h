@@ -27,10 +27,10 @@ template<class T>
 class SREF
 {
 public:
-	SREF( T * body ) throw() ;
-	SREF( ) throw()  ;
-	SREF( const SREF<T> & other ) throw()  ;
-	SREF<T> & operator=( const SREF<T> & other ) ; //throw() ;
+	SREF( T * body ) noexcept ;
+	SREF( ) noexcept  ;
+	SREF( const SREF<T> & other ) noexcept  ;
+	SREF<T> & operator=( const SREF<T> & other ) ; //noexcept ;
 	
 	// 
     ~SREF()
@@ -38,32 +38,32 @@ public:
         release(); 
     }
 	// 
-	T * operator->() const throw() 
+	T * operator->() const noexcept 
     { 
 		_ASSERT( pointee_ ) ;
         return pointee_; 
     }
 	// 
-	const T & operator *() const throw() 
+	const T & operator *() const noexcept 
     { 
 		_ASSERT( pointee_ ) ;
         return *pointee_; 
     }
 	// 
-	T & operator *() throw() 
+	T & operator *() noexcept 
     { 
 		_ASSERT( pointee_ ) ;
         return *pointee_; 
     }
 
 	// To easy to invoke this without realizing
-    //operator T*(void) throw() 
+    //operator T*(void) noexcept 
     //{ 
     //    return pointee_; 
     //}
     // This is more explicit
 	// 
-    T * ptr() throw()
+    T * ptr() noexcept
     {
         return pointee_ ;
     }
@@ -76,47 +76,75 @@ public:
 	}*/
 	
 	// 
-	bool isNull() const throw()
+	bool isNull() const noexcept
     { 
         return pointee_ == 0; 
     }
 
-    T * detach() throw() ;
-    bool operator<( const SREF<T> & rhs ) const throw() ;
-    bool operator>( const SREF<T> & rhs ) const throw() ;
+    T * detach() noexcept ;
+    bool operator<( const SREF<T> & rhs ) const noexcept ;
+    bool operator>( const SREF<T> & rhs ) const noexcept ;
 	// 
-	bool operator==( const SREF<T> & rhs ) const throw() ;
+	bool operator==( const SREF<T> & rhs ) const noexcept ;
 
 private:
-	void release() throw() ;
-	void addref() throw() ;
+
+	inline void release() // noexcept
+	{
+		if (!count_)
+			return;    // ref. counting null !
+
+		if (*count_ > 0)
+			--(*count_);   // dec. count
+
+		if (*count_ == 0)
+		{
+			if (pointee_)
+			{
+				delete pointee_;   // destructor may throw exception
+				pointee_ = 0;
+			}
+
+			delete count_;
+			count_ = 0;
+		}
+	}
+
+	inline void addref() noexcept
+	{
+		if (!count_)
+			return;    // ref. counting null !
+
+		if (*count_ > 0)
+			++(*count_);
+	}
 	// 
 	int * count_;
 	// 
 	T * pointee_;
-};
+}; // SREF
 
 template<class T>
-inline SREF<T>::SREF( T * pointee ) throw()
+inline SREF<T>::SREF( T * pointee ) noexcept
     : count_( new int(1) ), pointee_( pointee )
 {
 }
 
 template<class T>
-inline SREF<T>::SREF() throw()
+inline SREF<T>::SREF() noexcept
     : count_(0), pointee_(0)
 {
 }
 
 template<class T>
-inline SREF<T>::SREF( const SREF<T> & other ) throw()
+inline SREF<T>::SREF( const SREF<T> & other ) noexcept
     : count_( other.count_ ), pointee_( other.pointee_ )
 {
 	addref();
 }
 
 template<class T>
-inline SREF<T> & SREF<T>::operator=( const SREF<T> & other ) // throw()
+inline SREF<T> & SREF<T>::operator=( const SREF<T> & other ) // noexcept
 {
     if( this != &other )
 	{  
@@ -128,8 +156,9 @@ inline SREF<T> & SREF<T>::operator=( const SREF<T> & other ) // throw()
 	return *this ;
 }
 
+#if 0
 template<class T>
-inline void SREF<T>::release() // throw()
+inline void SREF<T>::release() // noexcept
 {
     if( ! count_ )
         return ;    // ref. counting null !
@@ -151,7 +180,7 @@ inline void SREF<T>::release() // throw()
 }
 
 template<class T>
-inline void SREF<T>::addref() throw()
+inline void SREF<T>::addref() noexcept
 {
     if( ! count_ )
         return ;    // ref. counting null !
@@ -159,9 +188,9 @@ inline void SREF<T>::addref() throw()
 	if( *count_ > 0 )
 		++(*count_) ;
 }
-
+#endif
 template<class T>
-inline T * SREF<T>::detach() throw()
+inline T * SREF<T>::detach() noexcept
 {
 	if( ! count_ )
         return 0 ;
@@ -173,19 +202,19 @@ inline T * SREF<T>::detach() throw()
 }
 
 template<class T>
-inline bool SREF<T>::operator<( const SREF<T> & rhs ) const throw()
+inline bool SREF<T>::operator<( const SREF<T> & rhs ) const noexcept
 {
 	return pointee_ < rhs.pointee_;
 }
 
 template<class T>
-inline bool SREF<T>::operator>( const SREF<T> & rhs ) const throw()
+inline bool SREF<T>::operator>( const SREF<T> & rhs ) const noexcept
 {
 	return pointee_ > rhs.pointee_;
 }
 
 template<class T>
-inline bool SREF<T>::operator==( const SREF<T> & rhs ) const throw()
+inline bool SREF<T>::operator==( const SREF<T> & rhs ) const noexcept
 {
 	return rhs.pointee_ == pointee_;
 }

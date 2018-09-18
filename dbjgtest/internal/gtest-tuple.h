@@ -129,7 +129,7 @@ template <typename T>
 struct ByRef<T&> { typedef T& type; };  // NOLINT
 
 // A handy wrapper for ByRef.
-#define GTEST_BY_REF_(T) typename ::std::tr1::gtest_internal::ByRef<T>::type
+#define GTEST_BY_REF_(T) typename ::std::gtest_internal::ByRef<T>::type
 
 // AddRef<T>::type is T if T is a reference; otherwise it's T&.  This
 // is the same as tr1::add_reference<T>::type.
@@ -139,7 +139,7 @@ template <typename T>
 struct AddRef<T&> { typedef T& type; };  // NOLINT
 
 // A handy wrapper for AddRef.
-#define GTEST_ADD_REF_(T) typename ::std::tr1::gtest_internal::AddRef<T>::type
+#define GTEST_ADD_REF_(T) typename ::std::gtest_internal::AddRef<T>::type
 
 // A helper for implementing get<k>().
 template <int k> class Get;
@@ -964,7 +964,7 @@ struct SameSizeTuplePrefixComparator<k, k> {
   template <class Tuple1, class Tuple2>
   static bool Eq(const Tuple1& t1, const Tuple2& t2) {
     return SameSizeTuplePrefixComparator<k - 1, k - 1>::Eq(t1, t2) &&
-        ::std::tr1::get<k - 1>(t1) == ::std::tr1::get<k - 1>(t2);
+        ::std::get<k - 1>(t1) == ::std::get<k - 1>(t2);
   }
 };
 

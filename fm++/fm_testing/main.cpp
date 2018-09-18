@@ -36,7 +36,7 @@ void show_help_screen( const wchar_t * exe_name, std::wostream & os = std::wclog
 		dbgout(L"%s",  L"NOTE: Command line tags are case sensitive." ) ;
 		dbgout(L"%s",  L"------------------------------------------------" ) ;
 }
- void show_test_names ( const wchar_t * exe_name, std::wostream & os = std::wclog )
+ void show_test_names ( const dbjsys::char_type * exe_name, std::wostream & os = std::wclog )
 {
 		using namespace dbj::test ; 
 		
@@ -68,7 +68,6 @@ void show_help_screen( const wchar_t * exe_name, std::wostream & os = std::wclog
 //-----------------------------------------------------------------------
 
 int wmain ( int argc, wchar_t ** argv )
-
 {
 	using bart = dbjsys::fm::bstr::nbstr ;
 
@@ -79,25 +78,25 @@ int wmain ( int argc, wchar_t ** argv )
 		// testing_.run("wrapwrap_test", std::wcout);
 
 		auto cli = dbjsys::fm::CLI::singleton();
-		auto vt = cli["-?"]; // vt is of variant type after this line
+		auto vt = cli[L"-?"]; // vt is of variant type after this line
 		// long lv = cli["-?"]; // vt to long happens and throws the exception
 //		int  iv = cli("-?", 13); // -? has no value and default 13 is returned
 
 		 // TODO: Fix This
 		try {
-			auto kv = cli.kv("-?");
+			auto kv = cli.kv(L"-?");
 			auto vc = kv.second;
 			// auto vl = vc.size() > 0 ? dbjsys::fm::CLI::string(vc.begin(), vc.end()) : dbjsys::fm::CLI::string() ;
 		}	catch (dbjsys::fm::CLI::not_found &) {
 		}
-#if 0
+#if 1
 		dbjsys::fm::cli_argument_string  cl_arg(L"~"); // def.val. is  L"~"
 
-		dbjsys::fm::cli_argument_string::Type testname_; // extract arg. val. by symbol '-t'
+		dbjsys::fm::cli_argument_string::Type testname_ ; // extract arg. val. by symbol '-t'
 
-		auto	tname = dbjsys::fm::cli_argument_(L"-t", L"");
+		auto	tname = dbjsys::fm::cli_argument_string(L"-t");
 
-		tname = dbjsys::fm::cli_argument_(0);
+		tname = dbjsys::fm::cli_argument_string(0);
 
 
 		if (cl_arg.exists(L"-?"))
@@ -108,7 +107,7 @@ int wmain ( int argc, wchar_t ** argv )
 		else
 			if (cl_arg.exists(L"-t"))
 			{
-				testname_ = cl_arg(L"-t");
+				testname_ = cl_arg( L"-t" );
 			}
 			else
 				if (cl_arg.exists(L"-ALL"))
@@ -129,7 +128,7 @@ int wmain ( int argc, wchar_t ** argv )
 		}
 
 		try {
-			testing_.run(testname_, std::wcout);
+			testing_.run( testname_.data(), std::wcout);
 		}
 		catch (wchar_t * x) {
 			dbj::test::dbgout(L"%s ERROR --  %s", argv[0], x);

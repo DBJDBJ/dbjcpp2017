@@ -169,7 +169,7 @@ public:
 	}
 
 	//
-	size_t size() const throw()
+	size_t size() const noexcept
 	{
 		return VBEG.size();
 	}

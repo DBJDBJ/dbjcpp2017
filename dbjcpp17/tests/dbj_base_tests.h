@@ -26,6 +26,7 @@ limitations under the License.
 
 // #include <UnitTest++\UnitTest++.h>
 #include "../../dbjgtest/gtest.h"
+#include "dbj_wide_console_solution.h"
 
 namespace {
 
@@ -55,7 +56,8 @@ namespace {
 
 		TEST(dbj_basic_tests, basic_test)
 			{
-			dbj::win::console::WideOut helper_;
+#if 0
+			::dbj::win::console::WideOut helper_;
 			/*
 			if locale is  "English_United Kingdom.1252" both strings bellow outpout as "|-+"
 			*/
@@ -65,6 +67,7 @@ namespace {
 
 			wcout << L"\nDoubles: " << doubles;
 			wcout << L"\nSingles: " << singles;
+#endif
 		}
 
 		
@@ -151,7 +154,7 @@ namespace {
 		}
 #endif
 		TEST(dbj_basic_tests, __wide_out__) {
-
+#if 0
 			win::console::WideOut wout;
 			const static std::wstring doubles = L"║═╚";
 			const static std::wstring singles = L"│─└";
@@ -162,10 +165,11 @@ namespace {
 			wprintf(L"\nWPRINTF attempt: [%s][%s]\n", doubles.data(), singles.data());
 
 			// printf("\nPRINTF attempt: [%S][%S]\n", doubles.data(), singles.data());
+#endif
 		}
 
 		 TEST(dbj_basic_tests, __find_first_of__) {
-
+#if 0
 			 win::console::WideOut wout;
 
 				const wchar_t format[] = { L"abra % ka % dabra" };
@@ -181,6 +185,7 @@ namespace {
 					DBJ_TRACE(L"\nFound placeholder \"%s\" in \"%s\", at position: %d", placeholder, format,
 						static_cast<int>(dbj)
 					);
+#endif
 		 }
 
 		 /*
@@ -188,6 +193,7 @@ namespace {
 		 */
 		 TEST(dbj_basic_tests, __console_setmode_solution__) 
 		 {
+#if 0
 	     static const wchar_t request[] = { L"кошка 日本国" };
 		 static const wchar_t request_coded[] = { L"\x043a\x043e\x0448\x043a\x0430 \x65e5\x672c\x56fd\n" };
 
@@ -197,15 +203,18 @@ namespace {
 			 // following crashes the UCRT (aka Universal CRT)
 			 // printf ("\nprintf() result: %S\n",   L"\x043a\x043e\x0448\x043a\x0430 \x65e5\x672c\x56fd\n");
 			 wo.print("\nwo.print() result: %S\n", request);
+#endif
 		 }
 
 		 TEST(dbj_basic_tests, __selection_sort__) 
 		 {
+#if 0
 			 win::console::WideOut wo;
 			 std::vector<wchar_t> vec = { L'W', L'Z', L'Y', L'X', L'9', L'8', L'7' };
 				wo.print("\n\nUnsorted %", range_to_string(vec));
 				dbj::selection_sort(vec);
 				wo.print("\nSorted %\n\n", range_to_string(vec));
+#endif
 		 }
 
 } // eof dbj basic tests suite

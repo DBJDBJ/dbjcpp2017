@@ -74,6 +74,18 @@ this makes crtdbg.h complain even it is not directly included
 #include <algorithm>	// (<algo.h>,<advalgo.h>, <algorith.h>)
 #include <functional>	// (<function.h>)
 //----------------------------------------------------------------
+#include <string>
+
+namespace dbjsys {
+#ifdef _UNICODE
+	typedef std::wstring string_type;
+#else
+	typedef std::string string_type;
+#endif
+	using char_type = typename dbjsys::string_type::value_type;
+}
+
+//----------------------------------------------------------------
 #include <iosfwd>		// only IO streams forward declarations are here
                         // when and if need the definitions include <fm/dbjio.h>
                         // DBJ 02.04.2001

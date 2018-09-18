@@ -14,81 +14,224 @@
 //*****************************************************************************/
 #pragma once
 #include "fm.h"
-#ifndef string_type
-typedef std::string string_type;
-#endif
-#if 0
+#include <thread>
+#include <chrono>
+
+// NOTE: use dbjsys::string_type
+
 /*
-std::vector based implementation
-
-vector<string> args(argv + 1, argv + argc);
-
-
-
+#include <string>
+#include <algorithm>
+#include <thread>
+#include <chrono>
+#include <map>
 */
-#endif
+
+/// <summary>
+/// The Command Line encapsulation aka TCL-ENC
+/// by dbj.org
+/// (c) statement is on the bottom of this file
+/// <remarks>
+/// Perhaps interesting in this design is the decision 
+/// not to succumb to C like cli 
+/// which is based on char ** (or wchar_t ** in case of Windows). 
+/// Internaly to represent the command line we will  use 
+/// <code>
+///  std::vector< std::wstring >; 
+/// </code>
+/// when dealing with the actual cli we will transform asap to  this
+/// thus internaly we do not have to deal with raw pointers.
+/// </remarks>
+/// </summary>
+namespace dbj::app_env {
+
+	/// <summary>
+	/// we develop only unicode windows app's
+	/// this dats type we use everyhwere
+	/// to provide CLI interface implementation
+	/// </summary>
+	using data_type = std::vector< std::wstring >;
+
+	using map_type =
+		std::map<std::wstring, std::wstring>;
+
+	namespace inner {
+
+		inline auto app_env_initor() {
+
+			/// <summary>
+			/// transform argw to data_type
+			/// base your cli proc code on data_type
+			/// instead of raw pointers 
+			/// data_type is standard c++ range
+			/// </summary>
+			/// <param name="args">__argw</param>
+			/// <param name="ARGC">__argc</param>
+			/// <returns>
+			/// instance of data_type
+			/// </returns>
+			auto command_line_data = [](size_t ARGC, wchar_t **  args)
+				-> data_type
+			{
+				_ASSERTE(*args != nullptr);
+				return data_type{ args, args + ARGC };
+			};
+
+			/// <summary>
+			/// pointers to the runtime environment
+			/// from UCRT
+			/// </summary>
+#define _CRT_DECLARE_GLOBAL_VARIABLES_DIRECTLY
+			wchar_t **  warg = (__wargv);
+			const unsigned __int64	argc = (__argc);
+			wchar_t **  wenv = (_wenviron);
+#undef _CRT_DECLARE_GLOBAL_VARIABLES_DIRECTLY
+
+			/// <summary>
+			///  we are here *before* main so 
+			/// __argv or __argw might be still empty
+			/// thus we will wait 1 sec for each of them 
+			/// if need to be
+			///  TODO: this is perhaps naive implementation?
+			/// </summary>
+			if (*warg == nullptr) {
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+			}
+			_ASSERTE(*warg != nullptr);
+
+			if (*wenv == nullptr) {
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+			}
+			_ASSERTE(*wenv != nullptr);
+
+			// extract the unicode  command line
+			data_type
+				warg_data{ command_line_data(static_cast<std::size_t>(argc), warg) };
+
+			// calculate the count of env vars 
+			auto count_to_null = [](auto ** list_) constexpr->size_t {
+				size_t rez{ 0 };
+				_ASSERTE(*list_ != nullptr);
+				for (; list_[rez] != NULL; ++rez) {};
+				return rez;
+			};
+
+			size_t evc = count_to_null(wenv);
+
+			// extract the environment pointer list
+			data_type
+				wenvp_data{ command_line_data(evc, wenv) };
+			app_env::map_type
+				wenvp_map{};
+
+			//transform env vars to k/v map
+			// each envar entry is 
+			// L"key=value" format
+			for (auto kv : wenvp_data) {
+				auto delimpos = kv.find(L"=");
+				auto key = kv.substr(0, delimpos);
+				auto val = kv.substr(delimpos + 1);
+				wenvp_map[key] = val;
+			}
+
+			return make_tuple(argc, warg_data, evc, wenvp_map);
+		};
+	}
+
+	// client code gets the instance of this
+	class structure final {
+	public:
+		using string_type	= typename data_type::value_type;
+		using cli_type		= data_type;
+		using env_var_type	= map_type;
+
+		const size_t			cli_args_count{};
+		const data_type			cli_data{};
+		const size_t			env_vars_count{};
+		const map_type			env_vars{};
+
+		// get's cli data -- no error check
+		string_type operator [] (size_t pos_) const noexcept 
+		{ return cli_data[pos_];  }
+		// get's env var data -- no error check
+		env_var_type::mapped_type operator []
+		(env_var_type::key_type key_) const noexcept = delete;
+				// { return env_vars[key_]; }
+
+	private:
+
+		void* operator new(std::size_t sz) = delete ;
+		void operator delete(void* ptr) = delete ;
+
+		structure(
+			unsigned __int64 argc,
+			data_type   argv,
+			unsigned __int64 env_count,
+			map_type	env_vars_
+		)
+			: cli_args_count(argc),
+			cli_data(argv),
+			env_vars_count(env_count),
+			env_vars(env_vars_)
+		{}
+
+	public:
+		static structure & instance() {
+			auto once = []() {
+				auto[argc, warg, envc, env_map] = inner::app_env_initor();
+				return structure{ argc, warg, envc, env_map };
+			};
+			static structure app_env_single_instance_ = once();
+			return app_env_single_instance_;
+		}
+	};
+
+} // dbj::app_env
 //--------------------------------------------------------------------------------------
+
+// std::vector based implementation
+// vector<string> args(argv + 1, argv + argc);
+//
 namespace dbjsys { namespace fm  {
 //--------------------------------------------------------------------------------------
 	/* Command Line Interface */
 	class CLI final {
-	public:
-#ifdef _UNICODE
-		typedef typename std::wstring string;
-		using bstr = dbjsys::fm::bstr::wbstr ;
-#else
-		typedef typename std::string string;
-		using bstr = dbjsys::fm::bstr::nbstr;
-#endif
 
-		typedef typename std::vector<string> CLIVector;
-		typedef typename CLIVector::iterator Iterator_type;
-		using value_type = CLIVector::value_type ;
+		::dbj::app_env::structure & app_env =
+			::dbj::app_env::structure::instance();
+
+	public:
 
 		class not_found : protected std::runtime_error {
 			not_found();
 		public:
-			// notorious std::exception suite dos work only with narrow strings
-			not_found(const std::string & m_) : runtime_error(m_) {
-			}
+			
+			// notorious std::exception suite does work only with narrow strings
+			not_found(const std::wstring & m_) 
+				: runtime_error(
+					std::string(m_.begin(), m_.end())
+				) {		}
+			
+			not_found(const std::string & m_) : runtime_error(m_) {		}
+
+
 			const char * what() const noexcept {
 				auto msg = std::string("dbj::fm::CLI::Error") + " not found: " + this->runtime_error::what();
 				return msg.c_str();
 			}
 		};
-	private:
-		CLIVector args_vec;
-	public:
+
 		// argument 0 from the command line
-		const string & exe_name() const noexcept
+		const ::dbjsys::string_type & exe_name() const noexcept
 		{
-#ifdef _UNICODE
-			static string executable = __wargv[0]; 
-#else
-			static string executable = __argv[0];
-#endif
-			return executable;
+			return this->app_env[0] ;
 		} 
 
 		// moving not allowed
-		CLI(CLI &&) {}
-		const CLI & operator = (CLI &&) {}
+		CLI(CLI &&) = delete;
+		const CLI & operator = (CLI &&) = delete;
 	protected :
-		CLI()
-//			: args_vec( __wargv, __wargv + __argc)
-//			: args_vec( __argv, __argv + __argc)
-		{
-#ifdef _DEBUG
-#ifdef _UNICODE
-			assert(__wargv);
-			assert(__argc);
-#else
-			assert(__argv);
-			assert(__argc);
-#endif
-#endif
-			args_vec = std::vector<string>(__wargv + 1, __wargv + __argc);
-		}
+		CLI() {	}
 	public:
 		static CLI & singleton() {
 			static CLI singleton_;
@@ -96,28 +239,27 @@ namespace dbjsys { namespace fm  {
 		}
 
 		// copying allowed
-		CLI(const CLI & right ) : args_vec(right.args_vec) { }
-		const CLI & operator = (const CLI & right ) {
-			if (this != &right) {
-				this->args_vec.clear();
-				this->args_vec = right.args_vec;
-			}
-			return *this;
-		}
+		CLI(const CLI & ) = default;
+		CLI & operator = (const CLI & ) = default;
 
-		auto operator [] (size_t idx_ )
+		::dbjsys::string_type operator [] (size_t idx_ )
 		{
-			assert(idx_ < args_vec.size());
-			return args_vec[idx_];
+			assert(idx_ <  this->app_env.cli_data.size() );
+			return this->app_env[idx_] ;
 		}
 
 		// return -1 if not found or index to the element found in the vector of arguments
-		// tag to be found is asci string but actual parama are CLI::string
+		// tag to be found is asci string but actual params are CLI::string
 		// that is string or wstring
-		auto find(const char * const tag_) const {
-			CLI::string tag = fm::bstr::cast<CLI::string>(tag_);
-				auto iter = std::find(args_vec.begin(), args_vec.end(), tag);
-					return (iter == args_vec.end() ? -1 : std::distance(args_vec.begin(), iter));
+		size_t find(const ::dbjsys::string_type & tag_) const 
+		{
+			auto iter = std::find(
+				this->app_env.cli_data.begin(), 
+				this->app_env.cli_data.end(), 
+				tag_
+			);
+			return (iter == this->app_env.cli_data.end() ? -1
+				: std::distance(this->app_env.cli_data.begin(), iter));
 		}
 
 		/*
@@ -125,7 +267,9 @@ namespace dbjsys { namespace fm  {
 		uses variant as convertor
 		*/
 		template<typename T>
-		T operator () (const char * cl_symbol, const T & default_value ) const
+		T operator () (
+			const ::dbjsys::char_type * cl_symbol, 
+			const T & default_value ) const
 		{
 				try {
 					auto vt = (*this)[cl_symbol];
@@ -135,7 +279,7 @@ namespace dbjsys { namespace fm  {
 				}
 				catch (...) {
 					// can not be converted to T
-					std::string msg; msg.resize( BUFSIZ, 0x00 );
+					std::string msg( BUFSIZ, 0x00 );
 					sprintf(
 						&msg[0], "Can not convert return value to type %s, CLI argument is: %s",
 						typeid(default_value).name(), cl_symbol);
@@ -143,24 +287,27 @@ namespace dbjsys { namespace fm  {
 				}
 		}
 
-
-		_variant_t operator [] (const char * cl_symbol) const
+		_variant_t operator [] (const ::dbjsys::char_type * cl_symbol) const
 		{
-			auto pos = find(cl_symbol);
-			if (pos == -1)
-				throw CLI::not_found(cl_symbol);
-			return _variant_t(args_vec[pos].data());
+			size_t pos = find(cl_symbol);
+				if (pos == -1)	throw CLI::not_found(cl_symbol);
+
+			return _variant_t(this->app_env[pos].data());
 		}
+
 #ifdef _UNICODE
-		const wchar_t key_prefix = L'-';
+		const ::dbjsys::char_type key_prefix = L'-';
 #else
-		const char key_prefix = '-';
+		const const ::dbjsys::char_type  key_prefix = '-';
 #endif
 		bool is_key(const size_t & pos ) const noexcept {
-				return args_vec[pos][0] == key_prefix;
+				return this->app_env[pos][0] == key_prefix;
 		}
 
-		using kvpair = std::pair<string, std::vector<string> >;
+		using kvpair = std::pair<
+			typename ::dbjsys::string_type, 
+			std::vector<typename ::dbjsys::string_type> 
+		>;
 		///<summary>
 		///return key value pair found by key 
 		///value is vector of strings, consider example of a (slightly weird but valid) CL:
@@ -173,7 +320,8 @@ namespace dbjsys { namespace fm  {
 		///"-bool", { "TRUE" }
 		///</code>
 		///</summary>
-		 kvpair kv( const dbjsys::fm::bstr::nbstr & key) const {
+		 kvpair kv( const ::dbjsys::string_type & key) const 
+		 {
 				 auto kpos = find(key);
 
 			 if (kpos == -1)
@@ -182,33 +330,33 @@ namespace dbjsys { namespace fm  {
 			 size_t kpos2 = ++ kpos  ;
 			 kvpair::second_type vec;
 
-			 while (kpos2 < args_vec.size()) {
+			 while (kpos2 < this->app_env.cli_args_count ) {
 				 if (is_key(kpos2)) {
 					 break;
 				 } 
-				 vec.push_back(args_vec[kpos2]);
+				 vec.push_back(this->app_env[kpos2]);
 				 ++ kpos2;
 			  }
-			 return std::make_pair((string)key, vec);
+			 return std::make_pair((::dbjsys::string_type)key, vec);
 		}
 
 	}; // eof CLI 
 #if 1
 	// use this as an universal cli argument that returns strings or wstrings 
 	DBJINLINE 
-		const CLI::value_type clargument(
-		const char  * cl_tag, 
-		const CLI::value_type & def_val
+		const ::dbjsys::string_type  clargument(
+		const ::dbjsys::char_type  * cl_tag,
+		const ::dbjsys::string_type  & def_val
 	)
 	{
 		try {
 #ifdef _DEBUG
 			auto cli = CLI::singleton() ;
 			auto vr = cli[cl_tag];
-			auto rv = (CLI::value_type)_bstr_t(vr);
+			auto rv = (::dbjsys::string_type)_bstr_t(vr);
 			return rv;
 #else
-			return (CLI::value_type)_bstr_t(CLI::singleton()[cl_tag]);
+			return (::dbjsys::string_type)_bstr_t(CLI::singleton()[cl_tag]);
 #endif
 		}
 		catch (CLI::not_found &){
@@ -226,13 +374,7 @@ Implementaion from cpp moved bellow
 namespace dbjsys {
 	namespace fm {
 		//--------------------------------------------------------------------------------------
-		namespace {
-
-#if defined( _UNICODE )
-			typedef wchar_t value_type;
-#else
-#error DBJ*FM++ __FILE__ has to be compiled as UNICODE 
-#endif
+		namespace inner {
 
 			// oo wrap up of the command line. ASCII version; uses __argv and __argc.
 			// _UNICODE version uses __wargv and __argc.
@@ -247,15 +389,20 @@ namespace dbjsys {
 			// this depends on comutil.h
 			//
 			// 
-			class CmdLineArguments {
+			class CmdLineArguments final {
 
-				// 
 				ScopeLocker critical_section__;
+
+				::dbj::app_env::structure & the_cli =
+					::dbj::app_env::structure::instance();
 
 				//--------------------------------------------------------
 				// return true it str begin's with prefix
 				// 
-				static const bool begins_with(const value_type * prefix, const value_type * str)
+				static const bool begins_with(
+					const dbjsys::char_type  * prefix, 
+					const dbjsys::char_type  * str
+				)
 				{
 					bool result_ = true;
 					for (int j = 0; prefix[j] != 0; j++)
@@ -270,35 +417,24 @@ namespace dbjsys {
 				// we can assume that both arguments begin with the prefix string
 				// and that prefix is shorter than str
 				// 
-				static const value_type * right_of(const value_type * prefix, const value_type * str)
+				static const dbjsys::char_type  * right_of(
+					const dbjsys::char_type  * prefix, 
+					const dbjsys::char_type  * str
+				)
 				{
 					int j = 0;
 					while ((prefix[j]) && (prefix[j] == str[j])) j++;
 					return str + j;
 				}
 
-				//--------------------------------------------------------
-				// 
-				value_type ** the_cli_arguments;
 			public:
-				// 
-				int      number_of_arguments;
-				//
-				// UNICODE version only!
-				CmdLineArguments()
-					: the_cli_arguments(__wargv), number_of_arguments(__argc)
-				{
-					DBJ_VERIFY(the_cli_arguments);
-				}
+				CmdLineArguments()	{	}
 
 				// 
-				~CmdLineArguments()
-				{
-					the_cli_arguments = 0;
-				}
+				~CmdLineArguments()	{ 	}
 
 				// return true if symbol exist on the current command line
-				const bool symbol_exists(const value_type * prefix)
+				const bool symbol_exists(const dbjsys::char_type  * prefix)
 				{
 					Lock auto_lock(critical_section__); // lock the whole instance
 
@@ -309,7 +445,7 @@ namespace dbjsys {
 
 					int j = 0;
 
-					const value_type * candidate_ = NULL;
+					const dbjsys::char_type  * candidate_ = NULL;
 
 					while (NULL != (candidate_ = operator [] (j++)))
 					{
@@ -320,12 +456,11 @@ namespace dbjsys {
 					return result_;
 				}
 				// 
-				const value_type * operator [] (const int index) const
+				const ::dbjsys::char_type  * operator [] (size_t index) const
 				{
 					Lock auto_lock(critical_section__); // lock the whole instance
-					if (index < 0) return NULL;
-					if (index >(number_of_arguments - 1)) return NULL;
-					return the_cli_arguments[index];
+					if (index > ( the_cli.cli_data.size() - 1) ) return nullptr ;
+					return the_cli[index].c_str();
 				}
 				//
 				// return argument value of the argument that begins with a prefix
@@ -340,11 +475,11 @@ namespace dbjsys {
 				// 
 				//
 				// 
-				const value_type * operator [] (const value_type * prefix) const
+				const dbjsys::char_type * operator [] (const dbjsys::char_type  * prefix) const
 				{
 					Lock auto_lock(critical_section__); // lock the whole instance
 
-					const value_type * result_ = (value_type*)0;
+					const dbjsys::char_type  * result_{};
 
 					if ((!prefix) && (!*prefix))
 						return result_; // anti jokers measure
@@ -366,13 +501,9 @@ namespace dbjsys {
 				//------------------------------------------------------------
 				// return argument found by its name
 				// ret type is variant
-				_variant_t operator () (const value_type * arg_name_) const
+				const dbjsys::char_type *  operator () (const dbjsys::char_type  * arg_name_) const
 				{
-					const value_type * cl_str = this->operator [] (arg_name_);
-					if ((cl_str != 0) && (cl_str[0] != 0))
-						return _variant_t(cl_str);
-					else
-						return _variant_t(); // VT_EMPTY
+					return this->operator [] (arg_name_);
 				}
 
 				//------------------------------------------------------------
@@ -387,15 +518,15 @@ namespace dbjsys {
 
 			};
 
-			CmdLineArguments & cline_ = CmdLineArguments::instance();
-		}
+		} // inner namespace 
 
-		//--------------------------------------------------------------------------------------
-
+		inline inner::CmdLineArguments & cline_ = inner::CmdLineArguments::instance();
 
 		// 
 		// CAUTION:
 		// cl_argument<bstr_t>, covers wchar_t uses perfectly well ...
+		// CAUTION 2018 :)
+		// no it does not
 		//--------------------------------------------------------------------------------------
 	} // namespace fm 
 } // namespace dbj 
@@ -478,14 +609,11 @@ namespace dbjsys {
 			// no default c-tor allowed
 			cl_argument() {}
 		public:
-			// hide the following typedef  do not make it "library wide"
-			typedef char			value_type;
-			typedef std::string		string_type;
+
+			using string_type = typename ::dbjsys::string_type;
 
 			// type of the cli value for the cli tag given
-			// typedef T Type;
-			// type of the string abstraction used
-			// typedef string_type String_type;
+			typedef T Type;
 			// copy constructor must receive a default value for the cli arguments
 			explicit
 				cl_argument(const T & defval) : defval_(defval), reqval_(defval)
@@ -494,13 +622,13 @@ namespace dbjsys {
 
 			const string_type & operator [] (const unsigned int & index) const
 			{
-				return string_type(cline_[index]);
+				return cline_[index] ;
 			}
 			//--------------------------------------------------------------------------------------
 			//
 			//    cl_argument encapsulates single comand line argument. 
 			//--------------------------------------------------------------------------------------
-			const bool exists(const value_type  * const cl_symbol)
+			const bool exists(const dbjsys::char_type   * const cl_symbol)
 			{
 				return cline_.symbol_exists(cl_symbol);
 			}
@@ -509,22 +637,16 @@ namespace dbjsys {
 			// resolve the actual value and its type by c.l. symbol used 
 			//
 			//--------------------------------------------------------------------------------------
-			const T & operator () (const value_type  * const cl_symbol)
+			const T & operator () (dbjsys::char_type * cl_symbol) // const
 			{
-				try {
-					_variant_t vart = cline_(cl_symbol);
+					const dbjsys::char_type * vart = cline_(cl_symbol);
 
-					if (VT_EMPTY != ((VARIANT)vart).vt)
-					{
-						this->reqval_ = (T)vart;
+					if ( vart )	{
+						this->reqval_ =  vart ;
 					}
 					else {
 						this->reqval_ = this->defval_;
 					}
-				}
-				catch (const ::_com_error & cerr_) {
-					assert(cerr_.ErrorMessage()); /* conversion failed */
-				}
 				return this->reqval_;
 			}
 
@@ -534,8 +656,10 @@ namespace dbjsys {
 		//----------------------------------------------------------------------------------------------
 		// common CLI arg types are just these two
 
-		typedef typename dbjsys::fm::cl_argument<std::string>   cli_argument_string;
-		typedef typename dbjsys::fm::cl_argument<long>          cli_argument_long;
+		typedef typename dbjsys::fm::cl_argument<::dbjsys::string_type>   
+			cli_argument_string;
+		typedef typename dbjsys::fm::cl_argument<long>          
+			cli_argument_long;
 
 		//----------------------------------------------------------------------------------------------
 		// use this as an universal cli method that enforces slightly different semantics from above
@@ -570,7 +694,7 @@ namespace dbjsys {
 		namespace test {
 			//--------------------------------------------------------------------------------------
 			// usage example
-			auto saberi = [] (auto a, auto b) {
+			inline auto saberi = [] (auto a, auto b) {
 				return a + b;
 			};
 
@@ -585,12 +709,12 @@ namespace dbjsys {
 				// so instead of this
 				// cl_argument<wchar_t *> kukulele(L"uh") ;
 				// declare this
-				cl_argument<bstr_t> kukulele(L"uh");
-
-
-				wchar_t * clarg = kukulele(L"-name");
-				long r = saberi(no_of_elements(L"-n"), str_len(L"-s"));
-
+				/*
+				cl_argument<wchar_t *> kukulele(L"uh");
+				wchar_t * clarg = kukulele(L"-name" );
+				long r = saberi(no_of_elements( L"-n" ), 
+					str_len( L"-s" ));
+                 */
 				// if cl was '-n 1024 -s 512' fun() above will receive 1024 and 512
 				// if cl was '-n1024 -s512'   fun() above will receive 1024 and 512
 				// if cl was '-n1024'         fun() above will receive 1024 and 256

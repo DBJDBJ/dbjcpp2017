@@ -170,7 +170,7 @@ template <class T> class Error : public IError
     typedef T thrower_type;
 
 	// 
-	Error(const DWORD & win32error_code, const  _bstr_t & file, const int line, bool DO_NOT_BEEP_ON_EXIT = false) throw()
+	Error(const DWORD & win32error_code, const  _bstr_t & file, const int line, bool DO_NOT_BEEP_ON_EXIT = false) noexcept
 		  : parent_type(
             parent_type::makeErrMsg( DBJTYPEID(thrower_type), win32error_code,file,line),
 			DO_NOT_BEEP_ON_EXIT )
@@ -178,7 +178,7 @@ template <class T> class Error : public IError
       }
   	//
 	// 
-      Error (const _bstr_t & msg, bool DO_NOT_BEEP_ON_EXIT = false ) throw()
+      Error (const _bstr_t & msg, bool DO_NOT_BEEP_ON_EXIT = false ) noexcept
 		  : parent_type(
             parent_type::makeErrMsg( DBJTYPEID(thrower_type), msg,L"~",0),
 			DO_NOT_BEEP_ON_EXIT )
@@ -187,7 +187,7 @@ template <class T> class Error : public IError
 
 	//
 	// 
-      Error (const  _bstr_t & msg, const  _bstr_t & file, const int line, bool DO_NOT_BEEP_ON_EXIT = false ) throw()
+      Error (const  _bstr_t & msg, const  _bstr_t & file, const int line, bool DO_NOT_BEEP_ON_EXIT = false ) noexcept
 		  : parent_type( 
 		    parent_type::makeErrMsg( DBJTYPEID(thrower_type) ,msg, file, line),
 			DO_NOT_BEEP_ON_EXIT )
