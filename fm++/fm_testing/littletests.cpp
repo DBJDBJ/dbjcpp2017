@@ -55,11 +55,14 @@ extern "C" void test1( void )
     std::string::iterator rbegin =  r.begin() ;
     NocaseStrEqual                  nse ;
 
-    std::transform( sbegin, send, sbegin, toupper ) ;
+	prompt(L"Before transformation: ") << _bstr_t(s.c_str());
+	
+	std::transform( sbegin, send, sbegin, toupper ) ;
     std::transform( sbegin, send, sbegin, sbegin, compareAndUpperizeChars ) ;
 
     prompt( L"After transformation: " ) << _bstr_t(s.c_str()) ;
-    prompt( _bstr_t(s.c_str()) ) << L"||" << _bstr_t(r.c_str()) << L" returned: " 
+
+    prompt( _bstr_t(s.c_str()) ) << L" || " << _bstr_t(r.c_str()) << L" returned: " 
         << ( s || r  ? L"equal" : L"not equal" ) ;
 }
 //-----------------------------------------------------------------------
@@ -88,7 +91,7 @@ extern"C"  void test5_timestamp()
 extern"C"  void test6()
 {
 #if defined (tokenizers_testing)
-    dbjsys::fm::token_test() ;
+ dbjsys::fm::token_test() ;
 #endif
 }
 //
@@ -114,9 +117,9 @@ namespace {
 
 	DBJINLINE void hash_test()
 	{
-		auto show1 = [](const string & name) {std::printf("hash(%s) : %d", name.data(), (long)Hash<string>()(name)); };
-		auto show2 = [](const _bstr_t & name) {std::printf("hash(%s) : %d", (char*)name, (long)Hash<_bstr_t>()(name)); };
-		auto show3 = [](const wchar_t * name) {std::printf("hash(%S) : %d", name, (long)Hash<wchar_t *>()(name)); };
+		auto show1 = [](const string & name) {std::printf("\nhash(%s) : %d", name.data(), (long)Hash<string>()(name)); };
+		auto show2 = [](const _bstr_t & name) {std::printf("\nhash(%s) : %d", (char*)name, (long)Hash<_bstr_t>()(name)); };
+		auto show3 = [](const wchar_t * name) {std::printf("\nhash(%S) : %d", name, (long)Hash<wchar_t *>()(name)); };
 
 		auto applicator = [](auto first, auto last, auto function) {
 			std::for_each(first, last, function);
@@ -204,6 +207,7 @@ DBJ_TREG( test5_timestamp ) ;
 DBJ_TREG( test6 ) ;
 DBJ_TREG( test7_testing_thread_map ) ;
 DBJ_TREG( test8 ) ;
+DBJ_TREG(token_test) ;
 //-----------------------------------------------------------------------
 // eofile
 //-----------------------------------------------------------------------
