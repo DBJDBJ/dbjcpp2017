@@ -71,54 +71,15 @@ int wmain ( int argc, wchar_t ** argv )
 {
 	using bart = dbjsys::fm::bstr::nbstr ;
 
+	dbjsys::fm::cli_argument_string::Type 
+		testname_; 
+
 	try {
-		wrap_test();
-		wrapwrap_test();
 		// testing_.run("wrap_test", std::wcout);
 		// testing_.run("wrapwrap_test", std::wcout);
 
-		auto cli = dbjsys::fm::CLI::singleton();
-		auto vt = cli[L"-?"]; // vt is of variant type after this line
-		// long lv = cli["-?"]; // vt to long happens and throws the exception
-//		int  iv = cli("-?", 13); // -? has no value and default 13 is returned
-
-		 // TODO: Fix This
-		try {
-			auto kv = cli.kv(L"-?");
-			auto vc = kv.second;
-			// auto vl = vc.size() > 0 ? dbjsys::fm::CLI::string(vc.begin(), vc.end()) : dbjsys::fm::CLI::string() ;
-		}	catch (dbjsys::fm::CLI::not_found &) {
-		}
-#if 1
-		dbjsys::fm::cli_argument_string  cl_arg(L"~"); // def.val. is  L"~"
-
-		dbjsys::fm::cli_argument_string::Type testname_ ; // extract arg. val. by symbol '-t'
-
-		auto	tname = dbjsys::fm::cli_argument_string(L"-t");
-
-		tname = dbjsys::fm::cli_argument_string(0);
-
-
-		if (cl_arg.exists(L"-?"))
-		{
 			show_test_names(argv[0], std::wcout);
-			return 1;
-		}
-		else
-			if (cl_arg.exists(L"-t"))
-			{
-				testname_ = cl_arg( L"-t" );
-			}
-			else
-				if (cl_arg.exists(L"-ALL"))
-				{
-					testname_ = L"~"; // do them ALL
-				}
-				else
-				{
-					show_help_screen(argv[0], std::wcout);
-					return 1;
-				}
+			// show_help_screen(argv[0], std::wcout);
 
 
 		if (testing_.number_of_registered_tests() < 1)
@@ -127,6 +88,8 @@ int wmain ( int argc, wchar_t ** argv )
 			return 2;
 		}
 
+		testname_ = L"~"; // do them ALL
+
 		try {
 			testing_.run( testname_.data(), std::wcout);
 		}
@@ -134,7 +97,6 @@ int wmain ( int argc, wchar_t ** argv )
 			dbj::test::dbgout(L"%s ERROR --  %s", argv[0], x);
 			return 2;
 		}
-#endif
 	}
 	dbjPOPERR
 	catch (const std::exception & x) {

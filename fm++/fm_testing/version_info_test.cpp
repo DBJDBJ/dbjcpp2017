@@ -23,7 +23,7 @@ static volatile const bstr_t BSTRFILE (__FILE__) ;
 //--------------------------------------------------------------------------------
 extern "C" void version_info_test()
 {
-	static  const wchar_t mname[] = L"x:\\bin\\debug\\dbjcluster.dll" ;
+	static  const wchar_t mname[] = L"c:\\windows\\notepad.exe" ;
 	try 
 	{
 		file_version fv( mname ) ;
@@ -47,7 +47,7 @@ extern "C" void version_info_test()
 //-----------------------------------------------------------------------
 // Register the test[s]
 //-----------------------------------------------------------------------
-static  const int    dummy1 = DBJTESTREG( version_info_test ) ;
+DBJ_TREG( version_info_test ) ;
 //-----------------------------------------------------------------------
 // eofile
 //-----------------------------------------------------------------------

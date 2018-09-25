@@ -196,13 +196,14 @@ extern"C"  void token_test()
 //-----------------------------------------------------------------------
 // Register the test[s]
 //-----------------------------------------------------------------------
-static const int   dummy1 = DBJTESTREG( test1 ) ;
-static const int   dummy2 = DBJTESTREG( test2 ) ;
-static const int   dummy3 = DBJTESTREG(hash_test_) ;
-static const int   dummy5 = DBJTESTREG( test5_timestamp ) ;
-static const int   dummy6 = DBJTESTREG( test6 ) ;
-static const int   dummy7 = DBJTESTREG( test7_testing_thread_map ) ;
-static const int   dummy8 = DBJTESTREG( test8 ) ;
+
+DBJ_TREG( test1 ) ;
+DBJ_TREG( test2 ) ;
+DBJ_TREG(hash_test_) ;
+DBJ_TREG( test5_timestamp ) ;
+DBJ_TREG( test6 ) ;
+DBJ_TREG( test7_testing_thread_map ) ;
+DBJ_TREG( test8 ) ;
 //-----------------------------------------------------------------------
 // eofile
 //-----------------------------------------------------------------------

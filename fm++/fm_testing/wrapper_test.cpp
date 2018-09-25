@@ -114,13 +114,15 @@ extern "C" void wrapwrap_test ( void)
 
 	ism_->insert( IntStringMap::value_type( 1, L"One" ) ) ;
 
-	ism_->find(1) ;
+	IntStringMap::iterator whatever = ism_->find(1) ;
+
+	DBJ_STATIC_ASSERT( whatever->first == 1 );
 }
 //-----------------------------------------------------------------------
 // Register the test[s]
 //-----------------------------------------------------------------------
-static  const int    dummy1 = DBJTESTREG( wrap_test ) ;
-static  const int    dummy2 = DBJTESTREG( wrapwrap_test ) ;
+DBJ_TREG( wrap_test ) ;
+DBJ_TREG( wrapwrap_test ) ;
 //-----------------------------------------------------------------------
 // eofile
 //-----------------------------------------------------------------------

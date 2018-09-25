@@ -51,6 +51,12 @@ See documentation on how to use Visual C++ 'Checked Iterators'
 #include <assert.h>
 #define DBJ_VERIFY assert
 #endif
+
+// this will actually evaluate the expression 
+// at compile time
+// repeated equal typedefs are allowed
+#define DBJ_STATIC_ASSERT(expr) typedef char __static_assert_t[sizeof(expr) > 0]
+
 /*
 this makes crtdbg.h complain even it is not directly included
 #ifdef _DEBUG
@@ -103,7 +109,9 @@ namespace dbjsys {
 #include <cstdlib>
 
 #ifndef  DBJINLINE
-#define DBJINLINE static __forceinline
+// #define DBJINLINE static __forceinline
+// DBJ 2018SEP25
+#define DBJINLINE inline
 #endif // ! DBJINLINE
 
 						/* 

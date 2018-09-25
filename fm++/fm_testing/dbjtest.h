@@ -20,9 +20,9 @@ typedef struct std::pair<TEST_FP,bstr_t> PAIR ;
 
 typedef std::list< PAIR > sequence_type ;
 
-DBJINLINE sequence_type * sequence() {
-	static sequence_type sequence_ = {} ;
-	return &sequence_;
+inline sequence_type & sequence() {
+	static sequence_type sequence_ {} ;
+	return sequence_;
 }
 //---------------------------------------------------------------------------
 inline void caller( PAIR & fp_name_pair_ )
@@ -96,17 +96,17 @@ inline const void run( std::wostream & os , const _bstr_t & test_id = null_test_
 	//  if no test axed for do them all
 	if ( test_id == null_test_id )
 	{
-		std::for_each( sequence()->begin(), sequence()->end(), caller ) ;
+		std::for_each( sequence().begin(), sequence().end(), caller ) ;
 	}
 	else {
 		// can  we find the test axed for ?
 		const sequence_type::iterator & location = std::find_if( 
-			sequence()->begin(), 
-			sequence()->end(), 
+			sequence().begin(), 
+			sequence().end(), 
 			comparator(test_id ) 
 		) ;
 
-		if ( location == sequence()->end() )
+		if ( location == sequence().end() )
 			throw L"Test not  found!" ;
 
 		caller( *location ) ;
@@ -123,25 +123,28 @@ struct DBJtest
 	DBJtest( int dummy = 0 )
 	{
 		// provoke making it
-		auto isp = implementation::sequence();
+		// auto isp = implementation::sequence();
 	}
 	~DBJtest  ()
 	{
 	}
-	const int reg ( implementation::TEST_FP test_function_pointer, const _bstr_t & test_name )
+	size_t reg ( implementation::TEST_FP test_function_pointer, const _bstr_t & test_name )
 	{
-		implementation::PAIR pair_ = std::make_pair( test_function_pointer, test_name ) ;
+		implementation::sequence().push_back(
+			std::make_pair(test_function_pointer, test_name)
+		) ;
 
-		implementation::sequence()->push_back( pair_ ) ;
+		// has to be at least 1 at this moment
+		_ASSERT(implementation::sequence().size() > 0);
 
-		return ( 1 == 1 ) ;
+		return (implementation::sequence().size()) ;
 	}
 
 	//------------------------------------------------------
 	// This  run() will runn all the tests as registered
-	const void run ( std::wostream & os = std::wclog )
+	void run ( std::wostream & os = std::wclog )
 	{
-		_ASSERT( implementation::sequence() ) ;
+		_ASSERT( implementation::sequence().size() > 0 ) ;
 
 		implementation::run( os ) ;
 	}
@@ -150,7 +153,7 @@ struct DBJtest
 	// This  run() will run only the test requested
 	const void run ( const  _bstr_t & testname, std::wostream & os = std::wclog )
 	{
-		_ASSERT( implementation::sequence() ) ;
+		_ASSERT(implementation::sequence().size() > 0);
 
 		implementation::run( os, testname ) ;
 	}
@@ -158,14 +161,15 @@ struct DBJtest
 	//------------------------------------------------------
 	const ::size_t number_of_registered_tests () const
 	{
-		return implementation::sequence()->size() ;
+		_ASSERT(implementation::sequence().size() > 0);
+		return implementation::sequence().size() ;
 	}
 
 	//------------------------------------------------------
 	const void show_registered_tests (std::wostream & os = std::wclog) const
 	{
-		std::for_each( implementation::sequence()->begin(), 
-			implementation::sequence()->end(), 
+		std::for_each( implementation::sequence().begin(), 
+			implementation::sequence().end(), 
 			implementation::show_test_name(os) ) ;
 	}
 
@@ -209,10 +213,13 @@ inline void dbgout(const wchar_t * pszFormat,  _variant_t & variant_arg)
 //-----------------------------------------------------------------------
 
 
-static dbj::test::DBJtest testing_ ;
+/*static -- DBJ 2018SEP25 --> */ inline  dbj::test::DBJtest testing_ ;
 
-#define DBJTESTREG(x) testing_.reg( x, bstr_t( #x )) ;
-
+#ifndef DBJ_TREG
+#define DBJ_EXD( x, y ) x ## y
+#define DBJTESTREG(x, C)  inline size_t DBJ_EXD(t_,C) = testing_.reg( x, bstr_t( #x ))
+#define DBJ_TREG( x ) DBJTESTREG(x, __COUNTER__)
+#endif
 
 
 //-----------------------------------------------------------------------

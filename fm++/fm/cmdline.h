@@ -145,10 +145,10 @@ namespace dbj::app_env {
 		using cli_type		= data_type;
 		using env_var_type	= map_type;
 
-		const size_t			cli_args_count{};
-		const data_type			cli_data{};
-		const size_t			env_vars_count{};
-		const map_type			env_vars{};
+		mutable size_t			cli_args_count{};
+		mutable data_type			cli_data{};
+		mutable size_t			env_vars_count{};
+		mutable map_type			env_vars{};
 
 		// get's cli data -- no error check
 		string_type operator [] (size_t pos_) const noexcept 
