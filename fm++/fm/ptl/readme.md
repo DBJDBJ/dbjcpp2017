@@ -1,12 +1,12 @@
 
 
-#DBJ*PTL
+# DBJ*PTL
 
-##DBJ's [Persistent Template Library](http://dbjdbj.github.io/fmpp)
+## DBJ's [Persistent Template Library](http://dbjdbj.github.io/fmpp)
 
-###(c) 1998-2015 by Dusan B. Jovanovic
+### (c) 1998-2015 by Dusan B. Jovanovic
 
-###Portions (c) 1997 by Al Stevens and Dr. Dobbs Journal
+### Portions (c) 1997 by Al Stevens and Dr. Dobbs Journal
 
 One surprisingly short and surprisingly functional implementation of
 persistence using standard C++ containers. Many thanks to Mr Al Stevens
@@ -25,4 +25,4 @@ Author &amp; Architect: DBJDBJ
 Licensing: MIT &amp; GPL
 
 ---------------------------------------------------------------------  
-####&copy; 2015 by [![dbj();](http://dbj.dbjdbj.org/wp-content/uploads/2014/06/dbj100x100.png)](http://www.dbj.org "dbj") 
+#### &copy; 2015 - 2018 by [![dbj();](https://dbj.org/wp-content/uploads/2014/06/dbj100x100.png)](http://www.dbj.org "dbj") 
